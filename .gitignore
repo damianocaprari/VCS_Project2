@@ -1,4 +1,5 @@
-__pychache__
+.idea
+**/__pychache__
 *.mp4
 **/images/*
 **/yolo_v3/weights/*
