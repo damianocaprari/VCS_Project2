@@ -23,10 +23,14 @@ def main_marco():
 
     net = create_darknet_instance(IMG_SIZE, device, 0.8, 0.4)
 
-    loader = VideoDataLoader('./project.mp4', IMG_SIZE)
+    loader = VideoDataLoader('./Videos/video1.mp4', IMG_SIZE)
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
 
     colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
     for idx, (img, torch_img) in enumerate(loader):
+        if img is None or torch_img is None:
+            continue
         print('Frame ', idx)
         torch_img = torch_img.type(Tensor).to(device)
 
@@ -37,12 +41,12 @@ def main_marco():
             for i, detection in enumerate(detections):
                 person = Person(detection[:4].cpu().numpy(), colors[i])
                 person.draw_bounding_box_on_img(img)
-        cv2.imshow('output', img)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        writer.write(img)
 
     if isinstance(loader, VideoDataLoader):
         loader.close()
+    writer.release()
+
 
 if __name__ == '__main__':
     main_marco()
