@@ -5,14 +5,15 @@ from data import VideoDataLoader
 from yolo_v3 import create_darknet_instance
 from utils import *
 from person import Person
+import numpy as np
 
 
 # todo ONLY main function, others in utils
 
 
 def main_matteo():
-    frame_extraction_from_video('./Videos/video1.mp4', 'Frames1')
-    #mog()
+    # frame_extraction_from_video('./Videos/video1.mp4', 'Frames1')
+    # mog()
 
     CUDA = torch.cuda.is_available()
     if CUDA is True:
@@ -40,6 +41,11 @@ def main_matteo():
             for i, detection in enumerate(detections):
                 person = Person(detection[:4].cpu().numpy(), colors[i])
                 person.draw_bounding_box_on_img(img)
+
+                print(person.p1, person.p2)
+                print(person.centroid)
+                cv2.circle(img, (person.centroid[0].astype(np.int), person.centroid[1].astype(np.int)), 3, (0, 255, 0), -1)
+
         cv2.imshow('output', img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
