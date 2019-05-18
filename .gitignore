@@ -1,4 +1,5 @@
 .idea
+.idea/*
 **/__pychache__
 *.mp4
 **/images/*

@@ -1,6 +1,7 @@
 import cv2
-
+import os
 import torchvision.transforms as transforms
+
 from yolo_v3.utils.datasets import pad_to_square, resize
 from yolo_v3.utils.utils import rescale_boxes
 
@@ -10,6 +11,32 @@ def cv2_img_to_torch_tensor(img, img_size):
     torch_img, _ = pad_to_square(torch_img, 0)
     torch_img = resize(torch_img, img_size)
     return torch_img
+
+
+def frame_extraction_from_video(video_name, folder_name):
+    vidcap = cv2.VideoCapture(video_name)
+    success, image = vidcap.read()
+    count = 0
+    os.mkdir(folder_name)
+    while success:
+        cv2.imwrite("./"+folder_name+"/frame%d.jpg" % count, image)
+        success, image = vidcap.read()
+        print('Read a new frame: ', success)
+        count += 1
+
+
+def mog():
+    cap = cv2.VideoCapture('./Videos/video1.mp4')
+    fgbg = cv2.bgsegm.createBackgroundSubtractorMOG(nmixtures=3)
+    while(1):
+        ret, frame = cap.read()
+        fgmask = fgbg.apply(frame)
+        cv2.imshow('frame',fgmask)
+        k = cv2.waitKey(20) & 0xff
+        if k == 27:
+            break
+    cap.release()
+    cv2.destroyAllWindows()
 
 
 def read_image_cv2_torch(input_img, img_size):
