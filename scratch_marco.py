@@ -46,8 +46,3 @@ def main_marco():
     if isinstance(loader, VideoDataLoader):
         loader.close()
     writer.release()
-
-
-if __name__ == '__main__':
-    main_marco()
-

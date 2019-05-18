@@ -4,6 +4,7 @@ import torchvision.transforms as transforms
 
 from yolo_v3.utils.datasets import pad_to_square, resize
 from yolo_v3.utils.utils import rescale_boxes
+import numpy as np
 
 
 def cv2_img_to_torch_tensor(img, img_size):
@@ -44,3 +45,24 @@ def read_image_cv2_torch(input_img, img_size):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     torch_img = cv2_img_to_torch_tensor(img, img_size)
     return img, torch_img
+
+
+class ColorGenerator(object):
+
+    def __init__(self):
+        self.__used_colors = np.empty((1, 3), dtype=np.uint8)
+
+    def generate_color(self):
+        color = np.random.randint(0, 256, 3, np.uint8)
+        r = self.__used_colors[:-1]
+
+        while True:
+            if np.any(r[r == color]):
+                continue
+            self.__used_colors[-1] = color
+            self.__used_colors = np.vstack((self.__used_colors, np.empty((1, 3), dtype=np.uint8)))
+            return color
+
+    @property
+    def colors(self):
+        return self.__used_colors[:-1]

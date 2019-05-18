@@ -18,4 +18,15 @@ class Person(object):
 
     def draw_bounding_box_on_img(self, img):
         img = cv2.rectangle(img, tuple(self.p1), tuple(self.p2), self.color)
+        img = cv2.putText(img, 'ID: ' + str(self.id), self.p1, cv2.FONT_HERSHEY_PLAIN, 12, self.color)
         return img
+
+
+def find_closest_person(current_person, persons):
+    current_centroid = current_person.centroid
+    others_centroid = np.empty(shape=(len(persons), 2), dtype=np.float)
+    for idx, p in enumerate(persons):
+        others_centroid[idx] = p.centroid
+
+    distances = np.sqrt(np.sum(np.square(others_centroid - current_centroid), axis=1))
+    return np.argmin(distances)
