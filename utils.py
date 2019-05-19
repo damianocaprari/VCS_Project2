@@ -3,6 +3,7 @@ import os
 import torchvision.transforms as transforms
 
 from yolo_v3.utils.datasets import pad_to_square, resize
+from person import *
 from yolo_v3.utils.utils import rescale_boxes
 import numpy as np
 
@@ -66,3 +67,19 @@ class ColorGenerator(object):
     @property
     def colors(self):
         return self.__used_colors[:-1]
+
+
+def follow_old_person(person, old_persons, old_persons_exists, tmp_persons):
+    if old_persons_exists is True:
+        idx_closest = find_closest_person(person, old_persons)
+        person.id = old_persons[idx_closest].id
+        person.color = old_persons[idx_closest].color
+        old_persons.remove(old_persons[idx_closest])
+        tmp_persons.append(person)
+        if not old_persons:
+            # lista vuota
+            old_persons_exists = False
+    else:
+        tmp_persons.append(person)
+
+    return person, old_persons, old_persons_exists, tmp_persons
