@@ -3,6 +3,8 @@ import glob
 import numpy as np
 import cv2
 
+from parameters import Parameters as P
+
 
 def run_calibration():
     directory = glob.glob('./CalibrationImages/**')

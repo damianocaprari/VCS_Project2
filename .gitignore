@@ -1,5 +1,6 @@
 .idea
 .idea/*
+.idea/workspace.xml
 **/__pychache__
 *.mp4
 *.avi

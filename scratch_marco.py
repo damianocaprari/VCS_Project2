@@ -6,6 +6,8 @@ from yolo_v3 import create_darknet_instance
 from utils import rescale_boxes
 from person import Person
 
+from parameters import Parameters as P
+
 
 # todo ONLY main function, others in utils
 
@@ -13,21 +15,21 @@ from person import Person
 def main_marco():
     CUDA = torch.cuda.is_available()
     if CUDA is True:
-        Tensor = torch.cuda.FloatTensor()
-        device = torch.device('cuda:0')
-        IMG_SIZE = 416
+        Tensor = torch.cuda.FloatTensor
+        device = torch.device(P.CUDA.DEVICE)
+        IMG_SIZE = P.CUDA.IMG_SIZE
     else:
         Tensor = torch.FloatTensor
-        device = torch.device('cpu')
-        IMG_SIZE = 160
+        device = torch.device(P.CPU.DEVICE)
+        IMG_SIZE = P.CPU.IMG_SIZE
 
-    net = create_darknet_instance(IMG_SIZE, device, 0.8, 0.4)
+    net = create_darknet_instance(IMG_SIZE, device, P.DARKNET.CONF_THS, P.DARKNET.NMS_THS)
 
     loader = VideoDataLoader('./Videos/video1.mp4', IMG_SIZE)
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+    fourcc = cv2.VideoWriter_fourcc(*P.VIDEOWRITER.FORMAT)
+    writer = cv2.VideoWriter('output.avi', fourcc, P.VIDEOWRITER.FPS, P.VIDEOWRITER.SIZE)
 
-    colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
+    colors = P.COLORS
     for idx, (img, torch_img) in enumerate(loader):
         if img is None or torch_img is None:
             continue
@@ -46,3 +48,7 @@ def main_marco():
     if isinstance(loader, VideoDataLoader):
         loader.close()
     writer.release()
+
+
+if __name__ == '__main__':
+    main_marco()

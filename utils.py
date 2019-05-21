@@ -6,6 +6,7 @@ from yolo_v3.utils.datasets import pad_to_square, resize
 from person import *
 from yolo_v3.utils.utils import rescale_boxes
 import numpy as np
+from parameters import Parameters as P
 
 
 def cv2_img_to_torch_tensor(img, img_size):
