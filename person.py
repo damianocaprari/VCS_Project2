@@ -29,6 +29,6 @@ def find_closest_person(current_person, persons):
     others_centroid = np.empty(shape=(len(persons), 2), dtype=np.float)
     for idx, p in enumerate(persons):
         others_centroid[idx] = p.centroid
-
-    distances = np.sqrt(np.sum(np.square(others_centroid - current_centroid), axis=1))
+    # distances = np.sqrt(np.sum(np.square(others_centroid - current_centroid), axis=1)) # no need to calc the sqrt
+    distances = np.sum(np.square(others_centroid - current_centroid), axis=1)
     return np.argmin(distances)
