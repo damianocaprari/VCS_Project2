@@ -42,7 +42,7 @@ class VideoDataLoader(object):
 
         ret, frame = self.video_capture.read()
         if ret is False:
-            raise Exception()
+            raise StopIteration()
         torch_frame = cv2_img_to_torch_tensor(frame, self.img_size)
         return frame, torch_frame
 
