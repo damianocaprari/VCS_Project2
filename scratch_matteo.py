@@ -32,11 +32,17 @@ def main_matteo():
     loader = VideoDataLoader('./Videos/video1.mp4', IMG_SIZE)
 
     colors = P.COLORS
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+
+    colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [255, 0, 255], [0, 255, 255]]
 
     old_persons_exists = False
     old_persons = []
 
     for idx, (img, torch_img) in enumerate(loader):
+        if img is None or torch_img is None:
+            continue
         print('Frame ', idx)
         torch_img = torch_img.type(Tensor).to(device)
 
@@ -55,6 +61,7 @@ def main_matteo():
                 person, old_persons, old_persons_exists, tmp_persons = follow_old_person(person, old_persons, old_persons_exists, tmp_persons)
 
                 person.draw_bounding_box_on_img(img)
+                print(person.id)
                 cv2.circle(img, (person.centroid[0].astype(np.int), person.centroid[1].astype(np.int)), 3, person.color, -1)
 
             if tmp_persons:
@@ -64,9 +71,20 @@ def main_matteo():
         cv2.imshow('output', img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+        #cv2.waitKey(10)
+
+        writer.write(img)
+
+    else:
+        # no detection
+        print("NO DETECTION")
+
+    print('a')
+    print('a')
 
     if isinstance(loader, VideoDataLoader):
         loader.close()
+    writer.release()
 
 
 if __name__ == '__main__':

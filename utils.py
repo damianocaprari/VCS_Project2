@@ -75,6 +75,9 @@ def follow_old_person(person, old_persons, old_persons_exists, tmp_persons):
         idx_closest = find_closest_person(person, old_persons)
         person.id = old_persons[idx_closest].id
         person.color = old_persons[idx_closest].color
+
+        person.centroid_past.append(old_persons[idx_closest].centroid)
+        
         old_persons.remove(old_persons[idx_closest])
         tmp_persons.append(person)
         if not old_persons:
