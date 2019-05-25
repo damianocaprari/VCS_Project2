@@ -1,16 +1,28 @@
 import torch
 import cv2
-
 from data import VideoDataLoader
 from yolo_v3 import create_darknet_instance
 from utils import *
 from person import *
 import numpy as np
-
 from parameters import Parameters as P
 
 
 # todo ONLY main function, others in utils
+def tracking(old_persons, img):
+    mask = np.zeros((img.shape[0], img.shape[1]), np.int)
+    imm = cv2.imread('./Frames1/frame0.jpg', )
+    for i in old_persons:
+        #for j in i.centroid_past:
+        for j in reversed(i.centroid_past):
+            print(j[0], j[1])
+            cv2.circle(imm, (j[0].astype(np.int), j[1].astype(np.int)), 2, i.color, -1)
+            cv2.imshow('out', imm)
+            cv2.waitKey(40)
+
+    cv2.imwrite('./out_track/track_video1.jpg', imm)
+
+#tracking()
 
 
 def main_matteo():
@@ -35,14 +47,13 @@ def main_matteo():
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
 
-    colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0], [255, 0, 255], [0, 255, 255]]
-
-    old_persons_exists = False
+    # old_persons_exists = False
     old_persons = []
 
     for idx, (img, torch_img) in enumerate(loader):
         if img is None or torch_img is None:
             continue
+        print(img.shape)
         print('Frame ', idx)
         torch_img = torch_img.type(Tensor).to(device)
 
@@ -53,12 +64,17 @@ def main_matteo():
             detections = rescale_boxes(detections, IMG_SIZE, img.shape[:2])
 
             tmp_persons = []
-
+            id_per_frame = 0
             for i, detection in enumerate(detections):
                 person = Person(detection[:4].cpu().numpy(), colors[i])
+                person.id = id_per_frame
+                # -----
+                person.centroid_past.append(person.centroid)
+                # -----
+                id_per_frame += 1
 
                 # ---- NUOVA FUNZIONE per trackare old persons
-                person, old_persons, old_persons_exists, tmp_persons = follow_old_person(person, old_persons, old_persons_exists, tmp_persons)
+                person, old_persons, tmp_persons = follow_old_person(person, old_persons, tmp_persons)
 
                 person.draw_bounding_box_on_img(img)
                 print(person.id)
@@ -66,7 +82,7 @@ def main_matteo():
 
             if tmp_persons:
                 old_persons.extend(tmp_persons)
-                old_persons_exists = True
+                # old_persons_exists = True
 
         cv2.imshow('output', img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -80,6 +96,7 @@ def main_matteo():
         print("NO DETECTION")
 
     print('a')
+    tracking(old_persons, img)
     print('a')
 
     if isinstance(loader, VideoDataLoader):

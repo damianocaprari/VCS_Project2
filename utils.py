@@ -70,20 +70,27 @@ class ColorGenerator(object):
         return self.__used_colors[:-1]
 
 
-def follow_old_person(person, old_persons, old_persons_exists, tmp_persons):
-    if old_persons_exists is True:
+def follow_old_person(person, old_persons, tmp_persons):
+    # if old_persons_exists is True:
+    if old_persons:
         idx_closest = find_closest_person(person, old_persons)
         person.id = old_persons[idx_closest].id
         person.color = old_persons[idx_closest].color
 
-        person.centroid_past.append(old_persons[idx_closest].centroid)
+        # person.centroid_past.append(old_persons[idx_closest].centroid.astype(np.int))
+        # person.centroid_past.extend(old_persons[idx_closest].centroid_past.astype(np.int))
+        # person.centroid_past.append(old_persons[idx_closest].centroid_past.astype(np.int))
+        cp = old_persons[idx_closest].centroid_past
+        person.centroid_past.extend(cp)
+
         
         old_persons.remove(old_persons[idx_closest])
         tmp_persons.append(person)
-        if not old_persons:
+        #if not old_persons:
             # lista vuota
-            old_persons_exists = False
+            #old_persons_exists = False
     else:
         tmp_persons.append(person)
+        # --------
 
-    return person, old_persons, old_persons_exists, tmp_persons
+    return person, old_persons, tmp_persons

@@ -5,7 +5,8 @@ import cv2
 class Person(object):
 
     def __init__(self, coordinates, color):
-        self.id = id(self)
+        #self.id = id(self)
+        self.id = 0
         self.p1 = np.round(coordinates[:2]).astype(np.int)
         self.p2 = np.round(coordinates[2:]).astype(np.int)
         self.h = self.p2[1] - self.p1[1]
