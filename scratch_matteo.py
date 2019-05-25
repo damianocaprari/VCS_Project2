@@ -9,22 +9,6 @@ from parameters import Parameters as P
 
 
 # todo ONLY main function, others in utils
-def tracking(old_persons, img):
-    mask = np.zeros((img.shape[0], img.shape[1]), np.int)
-    imm = cv2.imread('./Frames1/frame0.jpg', )
-    for i in old_persons:
-        #for j in i.centroid_past:
-        for j in reversed(i.centroid_past):
-            print(j[0], j[1])
-            cv2.circle(imm, (j[0].astype(np.int), j[1].astype(np.int)), 2, i.color, -1)
-            cv2.imshow('out', imm)
-            cv2.waitKey(40)
-
-    cv2.imwrite('./out_track/track_video1.jpg', imm)
-
-#tracking()
-
-
 def main_matteo():
     # frame_extraction_from_video('./Videos/video1.mp4', 'Frames1')
     # mog()
@@ -41,7 +25,7 @@ def main_matteo():
 
     net = create_darknet_instance(IMG_SIZE, device, P.DARKNET.CONF_THS, P.DARKNET.NMS_THS)
 
-    loader = VideoDataLoader('./Videos/video1.mp4', IMG_SIZE)
+    loader = VideoDataLoader('./Videos/video3.mp4', IMG_SIZE)
 
     colors = P.COLORS
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -96,7 +80,7 @@ def main_matteo():
         print("NO DETECTION")
 
     print('a')
-    tracking(old_persons, img)
+    tracking_centroid(old_persons, img)
     print('a')
 
     if isinstance(loader, VideoDataLoader):

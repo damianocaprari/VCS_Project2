@@ -77,20 +77,25 @@ def follow_old_person(person, old_persons, tmp_persons):
         person.id = old_persons[idx_closest].id
         person.color = old_persons[idx_closest].color
 
-        # person.centroid_past.append(old_persons[idx_closest].centroid.astype(np.int))
-        # person.centroid_past.extend(old_persons[idx_closest].centroid_past.astype(np.int))
-        # person.centroid_past.append(old_persons[idx_closest].centroid_past.astype(np.int))
         cp = old_persons[idx_closest].centroid_past
         person.centroid_past.extend(cp)
 
-        
         old_persons.remove(old_persons[idx_closest])
         tmp_persons.append(person)
-        #if not old_persons:
-            # lista vuota
-            #old_persons_exists = False
     else:
         tmp_persons.append(person)
         # --------
 
     return person, old_persons, tmp_persons
+
+
+def tracking_centroid(old_persons, img):
+    imm = cv2.imread('./Frames1/frame0.jpg', )
+    for i in old_persons:
+        #for j in i.centroid_past:
+        for j in reversed(i.centroid_past):
+            print(j[0], j[1])
+            cv2.circle(imm, (j[0].astype(np.int), j[1].astype(np.int)), 2, i.color, -1)
+            cv2.imshow('out', imm)
+            cv2.waitKey(40)
+    cv2.imwrite('./out_track/track_video3.jpg', imm)
