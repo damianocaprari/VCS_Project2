@@ -10,7 +10,8 @@ from parameters import Parameters as P
 
 
 def euclidean_distance(p1, p2):
-    return np.sqrt(np.sum(np.square(p1 - p2), axis=1))
+    print(p1,p2)
+    return np.sqrt(np.sum(np.square(p1 - p2), axis=0)).astype(np.float)
 
 
 def cv2_img_to_torch_tensor(img, img_size):
@@ -75,7 +76,6 @@ class ColorGenerator(object):
 
 
 def follow_old_person(person, old_persons, tmp_persons):
-    # if old_persons_exists is True:
     if old_persons:
         idx_closest = find_closest_person(person, old_persons)
         person.id = old_persons[idx_closest].id
@@ -88,9 +88,21 @@ def follow_old_person(person, old_persons, tmp_persons):
         tmp_persons.append(person)
     else:
         tmp_persons.append(person)
-        # --------
-
     return person, old_persons, tmp_persons
+
+
+def predict_centroid(old_persons):
+    for p in old_persons:
+        print(p.centroid_past)
+        if len(p.centroid_past) > 1:
+            t0 = p.centroid_past[0]
+            tm1 = p.centroid_past[1]
+            tp1x = 2 * t0[0] - tm1[0]   # punto medio
+            tp1y = 2 * t0[1] - tm1[1]
+            future_point = (tp1x, tp1y)
+            p.centroid_future = future_point
+            print(p.centroid_past)
+            print("future point: ", future_point)
 
 
 def tracking_centroid(old_persons, img):
@@ -118,7 +130,7 @@ def match_likelihood(this, other):
 
     # calculate likelihood as a function of distance, color, ...
     contributions = []
-    contributions.append( min(np.reciprocal(dist), np.max) )  # distance
+    contributions.append( min(np.reciprocal(dist), np.finfo(np.float).max))  # distance
     contributions.append( 0 )  # TODO decidere come calcolare la contribution del colore
     # contriutions.append( ... )
 
@@ -128,7 +140,7 @@ def match_likelihood(this, other):
 
 def update_persons(persons_new, persons_old, max_used_id):
     persons_tmp = []
-    if persons_old:
+    if persons_old:     # forse inutile dato che ho gia fatto il controllo fuori dalla funzione
         if len(persons_new) <= len(persons_old):
             remaining = persons_old
             for person_new in persons_new:
@@ -141,7 +153,6 @@ def update_persons(persons_new, persons_old, max_used_id):
                 else:
                     person_matching = remaining.pop(np.argmax(likelihoods))
                     person_matching.centroid_past.insert(0, person_new.centroid)
-
         else:  # len(persons_new) > len(persons_old):
             remaining = persons_new
             for person_old in persons_old:

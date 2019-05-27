@@ -13,7 +13,9 @@ class Person(object):
         self.w = self.p2[0] - self.p1[0]
         self.centroid = np.mean([self.p2, self.p1], axis=0)
         self.centroid_past = []
-        self.color = color # TODO color should be a function of its ID
+        self.color = color
+        self.centroid_future = (0,0)
+        # self.color = color # TODO color should be a function of its ID
 
 
     def draw_bounding_box_on_img(self, img):

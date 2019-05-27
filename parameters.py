@@ -66,7 +66,7 @@ class Parameters:
 
 
     class LIKELIHOOD:
-        DISTANCE_THS = 30
+        DISTANCE_THS = 30000
         WEIGHTS = [1,  # distance
                    1,  # color
                    # ... altro ...
