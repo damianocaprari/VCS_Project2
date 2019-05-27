@@ -153,10 +153,16 @@ def update_persons(persons_new, persons_old, max_used_id):
                     person_matching = remaining.pop(np.argmax(likelihoods))
                     person_old.centroid_past.insert(0, person_matching.centroid)
 
-            for r in remaining:
+            for p in remaining:
                 max_used_id += 1
-                r.id = max_used_id
-                persons_tmp.append(r)
+                p.id = max_used_id
+                persons_tmp.append(p)
+
+    else:  # persons_old is empty
+        for p in persons_new:
+            max_used_id += 1
+            p.id = max_used_id
+            persons_tmp.append(p)
 
     return persons_tmp, max_used_id
 
