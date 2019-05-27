@@ -126,22 +126,37 @@ def match_likelihood(this, other):
     return np.sum(np.multiply( contributions, P.LIKELIHOOD.WEIGHTS ))
 
 
-def assign_old_person(tbd):
-    # if old_persons_exists is True:
-    if old_persons:
-        idx_closest = find_closest_person(person, old_persons)
-        person.id = old_persons[idx_closest].id
-        person.color = old_persons[idx_closest].color
+def update_persons(persons_new, persons_old, max_used_id):
+    persons_tmp = []
+    if persons_old:
+        if len(persons_new) <= len(persons_old):
+            remaining = persons_old
+            for person_new in persons_new:
+                likelihoods = list(map(lambda x: match_likelihood(person_new, x), remaining))
+                if np.amax(likelihoods) <= 0:
+                    # no matches found
+                    max_used_id += 1
+                    person_new.id = max_used_id
+                    persons_tmp.append(person_new)
+                else:
+                    person_matching = remaining.pop(np.argmax(likelihoods))
+                    person_matching.centroid_past.insert(0, person_new.centroid)
 
-        cp = old_persons[idx_closest].centroid_past
-        person.centroid_past.extend(cp)
+        else:  # len(persons_new) > len(persons_old):
+            remaining = persons_new
+            for person_old in persons_old:
+                likelihoods = list(map(lambda x: match_likelihood(person_old, x), remaining))
+                if np.amax(likelihoods) <= 0:
+                    # no matches found
+                    continue
+                else:
+                    person_matching = remaining.pop(np.argmax(likelihoods))
+                    person_old.centroid_past.insert(0, person_matching.centroid)
 
-        old_persons.remove(old_persons[idx_closest])
-        tmp_persons.append(person)
-    else:
-        tmp_persons.append(person)
-        # --------
+            for r in remaining:
+                max_used_id += 1
+                r.id = max_used_id
+                persons_tmp.append(r)
 
-    return person, old_persons, tmp_persons
-
+    return persons_tmp, max_used_id
 
