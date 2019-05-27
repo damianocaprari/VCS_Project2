@@ -9,6 +9,10 @@ import numpy as np
 from parameters import Parameters as P
 
 
+def euclidean_distance(p1, p2):
+    return np.sqrt(np.sum(np.square(p1 - p2), axis=1))
+
+
 def cv2_img_to_torch_tensor(img, img_size):
     torch_img = transforms.ToTensor()(img)
     torch_img, _ = pad_to_square(torch_img, 0)
@@ -99,3 +103,45 @@ def tracking_centroid(old_persons, img):
             cv2.imshow('out', imm)
             cv2.waitKey(40)
     cv2.imwrite('./out_track/track_video3.jpg', imm)
+
+
+def match_likelihood(this, other):
+    """
+    :param this: person
+    :param other:  person
+    :return: likelihood value
+    """
+    # check thresholds
+    dist = euclidean_distance(this.centroid, other.centroid)
+    if dist > P.LIKELIHOOD.DISTANCE_THS:
+        return 0
+
+    # calculate likelihood as a function of distance, color, ...
+    contributions = []
+    contributions.append( min(np.reciprocal(dist), np.max) )  # distance
+    contributions.append( 0 )  # TODO decidere come calcolare la contribution del colore
+    # contriutions.append( ... )
+
+    # TODO forse vale la pena imparare la loss function con del ML
+    return np.sum(np.multiply( contributions, P.LIKELIHOOD.WEIGHTS ))
+
+
+def assign_old_person(tbd):
+    # if old_persons_exists is True:
+    if old_persons:
+        idx_closest = find_closest_person(person, old_persons)
+        person.id = old_persons[idx_closest].id
+        person.color = old_persons[idx_closest].color
+
+        cp = old_persons[idx_closest].centroid_past
+        person.centroid_past.extend(cp)
+
+        old_persons.remove(old_persons[idx_closest])
+        tmp_persons.append(person)
+    else:
+        tmp_persons.append(person)
+        # --------
+
+    return person, old_persons, tmp_persons
+
+

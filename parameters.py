@@ -27,6 +27,17 @@ class Parameters:
               [255, 255, 255],
               [0, 0, 0]]
 
+    class LIKELIHOOD:
+        DISTANCE_THS = 30
+        WEIGHTS = [1,  # distance
+                   1,  # color
+                   # ... altro ...
+                  ]
+
+
+
+
+
     # TODO altri
 
 

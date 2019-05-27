@@ -15,11 +15,11 @@ class Person(object):
         self.centroid_past = []
         self.color = color
 
+
     def draw_bounding_box_on_img(self, img):
         img = cv2.rectangle(img, tuple(self.p1), tuple(self.p2), self.color)
         img = cv2.putText(img, 'ID: ' + str(self.id), tuple(self.p1), cv2.FONT_HERSHEY_PLAIN, 0.8, self.color)
         return img
-
 
 def find_closest_person(current_person, persons):
     current_centroid = current_person.centroid
