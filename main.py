@@ -5,8 +5,8 @@ from scratch_matteo import main_matteo
 
 def main():
     # main_dami()
-    # main_marco()
-    main_matteo()
+    main_marco()
+    # main_matteo()
 
 
 if __name__ == '__main__':

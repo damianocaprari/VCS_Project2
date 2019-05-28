@@ -6,8 +6,21 @@ from yolo_v3 import create_darknet_instance
 from utils import rescale_boxes
 from person import Person
 
+from sort import SORT
 
-# todo ONLY main function, others in utils
+
+def analyse_detections(detections, tracker, img, img_size):
+    if detections is not None:
+        detections = detections[detections[:, -1] == 0.]
+        detections = rescale_boxes(detections, img_size, img.shape[:2])
+        d1 = detections[:, :4]
+        d2 = detections[:, 5].view(-1, 1)
+        detections = torch.cat((d1, d2), dim=1)
+        sure_trks = tracker.update(detections.numpy())
+        for sure_trks_idx in sure_trks:
+            person = tracker.trackers[sure_trks_idx]
+            person.draw_bounding_box_on_img(img)
+    return img
 
 
 def main_marco():
@@ -26,21 +39,15 @@ def main_marco():
     loader = VideoDataLoader('./Videos/video1.mp4', IMG_SIZE)
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+    tracker = SORT(Person, max_age=10, min_hits=3)
 
-    colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255]]
     for idx, (img, torch_img) in enumerate(loader):
+        print(idx)
         if img is None or torch_img is None:
             continue
-        print('Frame ', idx)
         torch_img = torch_img.type(Tensor).to(device)
-
         detections = net.detect(torch_img)[0]
-        if detections is not None:
-            detections = detections[detections[:, -1] == 0.]
-            detections = rescale_boxes(detections, IMG_SIZE, img.shape[:2])
-            for i, detection in enumerate(detections):
-                person = Person(detection[:4].cpu().numpy(), colors[i])
-                person.draw_bounding_box_on_img(img)
+        img = analyse_detections(detections, tracker, img, IMG_SIZE)
         writer.write(img)
 
     if isinstance(loader, VideoDataLoader):

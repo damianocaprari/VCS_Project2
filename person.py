@@ -1,27 +1,34 @@
 import numpy as np
 import cv2
 
+from sort import KalmanBoxTracker
 
-class Person(object):
 
-    def __init__(self, coordinates, color):
-        #self.id = id(self)
-        self.id = 0
-        self.p1 = np.round(coordinates[:2]).astype(np.int)
-        self.p2 = np.round(coordinates[2:]).astype(np.int)
-        self.h = self.p2[1] - self.p1[1]
-        self.w = self.p2[0] - self.p1[0]
-        self.centroid = np.mean([self.p2, self.p1], axis=0)
-        self.centroid_past = []
-        self.color = color
-        self.centroid_future = (0,0)
-        # self.color = color # TODO color should be a function of its ID
+class Person(KalmanBoxTracker):
 
+    def __init__(self, coordinates):
+        super(Person, self).__init__(coordinates)
+        self.color = []
+        self.__generate_color_from_id()
+
+    def __generate_color_from_id(self):
+        id_hex = self.id.hex
+        self.color.append(self.__generate_channel_from_hex(id_hex[:8]))
+        self.color.append(self.__generate_channel_from_hex(id_hex[8:24]))
+        self.color.append(self.__generate_channel_from_hex(id_hex[24:]))
+
+    def __generate_channel_from_hex(cls, hex_string):
+        ch = int(hex_string, 16)
+        return ch % 256
 
     def draw_bounding_box_on_img(self, img):
-        img = cv2.rectangle(img, tuple(self.p1), tuple(self.p2), self.color)
-        img = cv2.putText(img, 'ID: ' + str(self.id), tuple(self.p1), cv2.FONT_HERSHEY_PLAIN, 0.8, self.color)
+        bbox = self.state
+        p1 = tuple(bbox[:2])
+        p2 = tuple(bbox[2:])
+        img = cv2.rectangle(img, p1, p2, self.color, 2)
+        img = cv2.putText(img, 'ID: ' + str(self.id), p1, cv2.FONT_HERSHEY_PLAIN, 0.8, self.color)
         return img
+
 
 def find_closest_person(current_person, persons):
     current_centroid = current_person.centroid
