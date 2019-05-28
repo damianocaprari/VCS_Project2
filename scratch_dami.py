@@ -4,7 +4,8 @@ import cv2
 from data import VideoDataLoader
 from yolo_v3 import create_darknet_instance
 from utils import rescale_boxes
-from person import Person
+#from person import Person
+from person_old import PersonOLD
 
 from parameters import Parameters as P
 
@@ -41,7 +42,7 @@ def main_dami():
             detections = detections[detections[:, -1] == 0.]
             detections = rescale_boxes(detections, IMG_SIZE, img.shape[:2])
             for i, detection in enumerate(detections):
-                person = Person(detection[:4].cpu().numpy(), colors[i])
+                person = PersonOLD(detection[:4].cpu().numpy(), colors[i])
                 person.draw_bounding_box_on_img(img)
         writer.write(img)
 

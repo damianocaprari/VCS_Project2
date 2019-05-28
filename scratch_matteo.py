@@ -3,8 +3,9 @@ import cv2
 from data import VideoDataLoader
 from yolo_v3 import create_darknet_instance
 from utils import *
-from person import *
+#from person import *
 import numpy as np
+from person_old import PersonOLD
 from parameters import Parameters as P
 
 
@@ -52,7 +53,7 @@ def main_matteo():
             persons_new = []
 
             for i, detection in enumerate(detections):
-                person = Person(detection[:4].cpu().numpy(), colors[i])
+                person = PersonOLD(detection[:4].cpu().numpy(), colors[i])
                 # max_used_id  += 1
                 persons_new.append(person)
                 '''
