@@ -10,7 +10,7 @@ from parameters import Parameters as P
 
 
 def euclidean_distance(p1, p2):
-    print(p1,p2)
+    print(p1, p2)
     return np.sqrt(np.sum(np.square(p1 - p2), axis=0)).astype(np.float)
 
 

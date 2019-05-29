@@ -6,8 +6,9 @@ from yolo_v3 import create_darknet_instance
 from utils import rescale_boxes
 from person import Person
 
-
 from sort import SORT
+
+from datetime import datetime
 
 
 def analyse_detections(detections, tracker, img, img_size):
@@ -35,6 +36,8 @@ def main_marco():
         device = torch.device('cpu')
         IMG_SIZE = 416
 
+    startTime = datetime.now()
+
     net = create_darknet_instance(IMG_SIZE, device, 0.8, 0.4)
 
     loader = VideoDataLoader('./Videos/video6.mp4', IMG_SIZE)
@@ -55,3 +58,5 @@ def main_marco():
 
     if isinstance(loader, VideoDataLoader):
         loader.close()
+    writer.release()
+    print("\n\nTime taken:", datetime.now() - startTime, "\n")

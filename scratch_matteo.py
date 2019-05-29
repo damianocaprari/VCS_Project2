@@ -7,6 +7,7 @@ from utils import *
 import numpy as np
 from person_old import PersonOLD
 from parameters import Parameters as P
+from datetime import datetime
 
 
 # todo ONLY main function, others in utils
@@ -43,6 +44,8 @@ def main_matteo():
             continue
         print('Frame ', idx)
         torch_img = torch_img.type(Tensor).to(device)
+
+        startTime = datetime.now()
 
         detections = net.detect(torch_img)[0]
         if detections is not None:
@@ -91,9 +94,10 @@ def main_matteo():
 
         writer.write(img)
 
-    else:
-        # no detection
-        print("NO DETECTION")
+        #else:
+        #    # no detection
+        #    print("NO DETECTION")
+        print("\n\nTime taken:", datetime.now() - startTime, "\n")
 
     print('a')
     #tracking_centroid(persons_old, img)
@@ -111,6 +115,9 @@ def main_matteo_old_CORRETTA():
     # col = ColorGenerator()
 
     CUDA = torch.cuda.is_available()
+
+    # CUDA = False
+
     if CUDA is True:
         Tensor = torch.cuda.FloatTensor
         device = torch.device(P.CUDA.DEVICE)
@@ -122,14 +129,16 @@ def main_matteo_old_CORRETTA():
 
     net = create_darknet_instance(IMG_SIZE, device, P.DARKNET.CONF_THS, P.DARKNET.NMS_THS)
 
-    loader = VideoDataLoader('./Videos/video3.mp4', IMG_SIZE)
+    loader = VideoDataLoader('./Videos/video6.mp4', IMG_SIZE)
 
     colors = P.COLORS
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+    writer = cv2.VideoWriter('./output_OLD/output_video6.avi', fourcc, 20.0, (640, 480))
 
     # old_persons_exists = False
     old_persons = []
+
+    startTime = datetime.now()
 
     for idx, (img, torch_img) in enumerate(loader):
         if img is None or torch_img is None:
@@ -146,7 +155,7 @@ def main_matteo_old_CORRETTA():
             tmp_persons = []
             id_per_frame = 0
             for i, detection in enumerate(detections):
-                person = Person(detection[:4].cpu().numpy(), colors[i])
+                person = PersonOLD(detection[:4].cpu().numpy(), colors[i])
                 person.id = id_per_frame
                 # -----
                 person.centroid_past.append(person.centroid)
@@ -175,6 +184,7 @@ def main_matteo_old_CORRETTA():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         #cv2.waitKey(10)
+        print("\n\nTime taken:", datetime.now() - startTime, "\n")
 
         writer.write(img)
 
@@ -185,12 +195,12 @@ def main_matteo_old_CORRETTA():
     print('a')
     tracking_centroid(old_persons, img)
     print('a')
-
+    print("\n\nTime taken:", datetime.now() - startTime, "\n")
     if isinstance(loader, VideoDataLoader):
         loader.close()
     writer.release()
 
 
 if __name__ == '__main__':
-    main_matteo()
+    main_matteo_old_CORRETTA()
 
