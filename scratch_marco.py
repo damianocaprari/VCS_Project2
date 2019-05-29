@@ -1,10 +1,11 @@
 import torch
 import cv2
 
-from data import VideoDataLoader
+from data import VideoDataLoader, ImageFolderDataLoader
 from yolo_v3 import create_darknet_instance
 from utils import rescale_boxes
 from person import Person
+
 
 from sort import SORT
 
@@ -32,24 +33,25 @@ def main_marco():
     else:
         Tensor = torch.FloatTensor
         device = torch.device('cpu')
-        IMG_SIZE = 160
+        IMG_SIZE = 416
 
     net = create_darknet_instance(IMG_SIZE, device, 0.8, 0.4)
 
-    loader = VideoDataLoader('./Videos/video1.mp4', IMG_SIZE)
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+    loader = VideoDataLoader('./Videos/video6.mp4', IMG_SIZE)
     tracker = SORT(Person, max_age=10, min_hits=3)
+
+    out_folder = 'output/'
 
     for idx, (img, torch_img) in enumerate(loader):
         print(idx)
+        img = cv2.resize(img, (640, 480))
         if img is None or torch_img is None:
             continue
         torch_img = torch_img.type(Tensor).to(device)
         detections = net.detect(torch_img)[0]
         img = analyse_detections(detections, tracker, img, IMG_SIZE)
-        writer.write(img)
+        out_file = out_folder + str(idx) + '.jpg'
+        cv2.imwrite(out_file, img)
 
     if isinstance(loader, VideoDataLoader):
         loader.close()
-    writer.release()

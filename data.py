@@ -1,12 +1,11 @@
 import glob
 
 import cv2
-from torch.utils.data import Dataset, DataLoader
 
 from utils import read_image_cv2_torch, cv2_img_to_torch_tensor
 
 
-class _ImageFolderDataset(Dataset):
+class ImageFolderDataLoader(object):
 
     def __init__(self, folder_name, img_size):
         if folder_name[-1] == '/':
@@ -15,16 +14,21 @@ class _ImageFolderDataset(Dataset):
             append = '/**'
         self.folder = glob.glob(folder_name + append)
         self.img_size = img_size
+        self.last_index = 0
 
     def __getitem__(self, index):
-        return read_image_cv2_torch(self.folder[index], self.img_size)
+        img, torch_img = read_image_cv2_torch(self.folder[index], self.img_size)
+        return img, torch_img
+
+    def __next__(self):
+        if self.last_index == len(self):
+            raise StopIteration()
+        img, torch_img = self.__getitem__(self.last_index)
+        self.last_index += 1
+        return img, torch_img
 
     def __len__(self):
         return len(self.folder)
-
-
-def ImageFolderDataLoader(folder_name, img_size):
-    return DataLoader(_ImageFolderDataset(folder_name, img_size))
 
 
 class VideoDataLoader(object):
