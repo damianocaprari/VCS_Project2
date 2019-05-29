@@ -1,5 +1,6 @@
 import torch
 import cv2
+import numpy as np
 
 from data import VideoDataLoader
 from yolo_v3 import create_darknet_instance
@@ -11,6 +12,71 @@ from parameters import Parameters as P
 
 
 # todo ONLY main function, others in utils
+
+def alignImages(im1, im2):
+
+    # Convert images to grayscale
+    im1Gray = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
+    im2Gray = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
+
+    minimap_grid_pts = [
+        [250, 125],
+        [660, 236],
+        [771, 588],
+        [359, 476]
+    ]
+
+    minimap_pts = [
+        [383, 209],
+        [955, 364],
+        [1109, 855],
+        [536, 699]
+    ]
+
+    perspective_pts = [
+        [243, 60],
+        [531, 168],
+        [551, 381],
+        [132, 167]
+    ]
+
+    # Extract location of good matches
+    minimap_pts = np.array(minimap_grid_pts, dtype=np.float32)
+    perspective_pts = np.array(perspective_pts, dtype=np.float32)
+
+    # Find homography
+    h, mask = cv2.findHomography(perspective_pts, minimap_pts)
+
+    # Use homography
+    height, width, channels = im2.shape
+    im1Reg = cv2.warpPerspective(im1, h, (width, height))
+
+    return im1Reg, h
+
+
+def main_dami_minimap():
+    # Read reference image
+    refFilename = "cvcs02_minimap_grid.jpeg"
+    print("Reading reference image : ", refFilename)
+    imReference = cv2.imread(refFilename, cv2.IMREAD_COLOR)
+
+    # Read image to be aligned
+    imFilename = "Frames1/frame0.jpg"
+    print("Reading image to align : ", imFilename)
+    im = cv2.imread(imFilename, cv2.IMREAD_COLOR)
+
+    print("Aligning images ...")
+    # Registered image will be resotred in imReg.
+    # The estimated homography will be stored in h.
+    imReg, h = alignImages(im, imReference)
+
+    # Write aligned image to disk.
+    outFilename = "aligned.jpg"
+    print("Saving aligned image : ", outFilename)
+    cv2.imwrite(outFilename, imReg)
+
+    # Print estimated homography
+    print("Estimated homography : \n", h)
 
 
 def main_dami():
@@ -52,7 +118,5 @@ def main_dami():
 
 
 if __name__ == '__main__':
-
-
-
-    main_dami()
+    main_dami_minimap()
+    # main_dami()
