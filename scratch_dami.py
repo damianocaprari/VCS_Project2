@@ -1,5 +1,6 @@
 import torch
 import cv2
+import numpy as np
 
 from data import VideoDataLoader
 from yolo_v3 import create_darknet_instance
@@ -7,10 +8,91 @@ from utils import rescale_boxes
 #from person import Person
 from person_old import PersonOLD
 
+from utils import map_points_onto_minimap
 from parameters import Parameters as P
 
 
 # todo ONLY main function, others in utils
+
+# USED TO CREATE THE MINIMAP
+"""
+def alignImages(im1, im2):
+    target_size = (1000, 1000)
+    minimap_grid_pts = [
+        [510 + (target_size[0] - 1100), 50 + (target_size[1] - 750)],
+        [900 + (target_size[0] - 1100), 150 + (target_size[1] - 750)],
+        [1020 + (target_size[0] - 1100), 500 + (target_size[1] - 750)],
+        [610 + (target_size[0] - 1100), 390 + (target_size[1] - 750)]
+    ]
+    perspective_pts = [
+        [243, 60],
+        [531, 168],
+        [551, 381],
+        [132, 167]
+    ]
+
+    # Extract location of good matches
+    minimap_pts = np.array(minimap_grid_pts, dtype=np.float32)
+    perspective_pts = np.array(perspective_pts, dtype=np.float32)
+
+    # Find homography
+    h, mask = cv2.findHomography(perspective_pts, minimap_pts)
+
+    # Use homography
+    im1Reg = cv2.warpPerspective(im1, h, target_size)
+
+    return im1Reg, h
+"""
+
+"""
+def main_dami_minimap():
+    # Read reference image
+    refFilename = "cvcs02_minimap_grid.jpeg"
+    print("Reading reference image : ", refFilename)
+    imReference = cv2.imread(refFilename, cv2.IMREAD_COLOR)
+
+    # Read image to be aligned
+    imFilename = "Frames1/frame0.jpg"
+    print("Reading image to align : ", imFilename)
+    im = cv2.imread(imFilename, cv2.IMREAD_COLOR)
+
+    print("Aligning images ...")
+    # Registered image will be resotred in imReg.
+    # The estimated homography will be stored in h.
+    imReg, h = alignImages(im, imReference)
+
+    # Write aligned image to disk.
+    outFilename = "aligned.jpg"
+    print("Saving aligned image : ", outFilename)
+    cv2.imwrite(outFilename, imReg)
+
+    # Print estimated homography
+    print("Estimated homography : \n", h)
+"""
+
+"""
+main_prove_con_perspectiveTransform():
+target_size = (1000, 1000)
+    dst = np.array([
+        [510 + (target_size[0] - 1100), 50 + (target_size[1] - 750)],
+        [900 + (target_size[0] - 1100), 150 + (target_size[1] - 750)],
+        [1020 + (target_size[0] - 1100), 500 + (target_size[1] - 750)],
+        [610 + (target_size[0] - 1100), 390 + (target_size[1] - 750)]
+    ], dtype=np.float32)
+
+    src = np.array([
+        [243, 60],
+        [531, 168],
+        [551, 381],
+        [132, 167]
+    ], dtype=np.float32)
+
+
+    M = cv2.getPerspectiveTransform(src, dst)
+    ret = cv2.perspectiveTransform(np.array([src]), P.HOMOGRAPHY.MAT)
+
+    print(dst == map_points_onto_minimap(src))
+"""
 
 
 def main_dami():
@@ -52,7 +134,6 @@ def main_dami():
 
 
 if __name__ == '__main__':
-
-
-
     main_dami()
+
+

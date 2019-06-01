@@ -34,13 +34,13 @@ def main_marco():
     else:
         Tensor = torch.FloatTensor
         device = torch.device('cpu')
-        IMG_SIZE = 416
+        IMG_SIZE = 160
 
     startTime = datetime.now()
 
     net = create_darknet_instance(IMG_SIZE, device, 0.8, 0.4)
 
-    loader = VideoDataLoader('./Videos/video6.mp4', IMG_SIZE)
+    loader = VideoDataLoader('./Videos/vid2.avi', IMG_SIZE)
     tracker = SORT(Person, max_age=10, min_hits=3)
 
     out_folder = 'output/'
