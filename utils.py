@@ -266,3 +266,10 @@ def update_persons(persons_detected, persons_old, max_used_id):
 
     return persons_tmp, max_used_id
 
+
+def map_points_onto_minimap(pts):
+    """
+    :param pts: list of 2D points
+    :return:  np.array of mapped 2D points
+    """
+    return np.rint(cv2.perspectiveTransform(np.array([pts]), P.HOMOGRAPHY.MAT)[0])
