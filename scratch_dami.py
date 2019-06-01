@@ -8,31 +8,22 @@ from utils import rescale_boxes
 #from person import Person
 from person_old import PersonOLD
 
+from utils import map_points_onto_minimap
 from parameters import Parameters as P
 
 
 # todo ONLY main function, others in utils
 
+# USED TO CREATE THE MINIMAP
+"""
 def alignImages(im1, im2):
-
-    # Convert images to grayscale
-    im1Gray = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
-    im2Gray = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
-
+    target_size = (1000, 1000)
     minimap_grid_pts = [
-        [250, 125],
-        [660, 236],
-        [771, 588],
-        [359, 476]
+        [510 + (target_size[0] - 1100), 50 + (target_size[1] - 750)],
+        [900 + (target_size[0] - 1100), 150 + (target_size[1] - 750)],
+        [1020 + (target_size[0] - 1100), 500 + (target_size[1] - 750)],
+        [610 + (target_size[0] - 1100), 390 + (target_size[1] - 750)]
     ]
-
-    minimap_pts = [
-        [383, 209],
-        [955, 364],
-        [1109, 855],
-        [536, 699]
-    ]
-
     perspective_pts = [
         [243, 60],
         [531, 168],
@@ -48,12 +39,12 @@ def alignImages(im1, im2):
     h, mask = cv2.findHomography(perspective_pts, minimap_pts)
 
     # Use homography
-    height, width, channels = im2.shape
-    im1Reg = cv2.warpPerspective(im1, h, (width, height))
+    im1Reg = cv2.warpPerspective(im1, h, target_size)
 
     return im1Reg, h
+"""
 
-
+"""
 def main_dami_minimap():
     # Read reference image
     refFilename = "cvcs02_minimap_grid.jpeg"
@@ -77,6 +68,31 @@ def main_dami_minimap():
 
     # Print estimated homography
     print("Estimated homography : \n", h)
+"""
+
+"""
+main_prove_con_perspectiveTransform():
+target_size = (1000, 1000)
+    dst = np.array([
+        [510 + (target_size[0] - 1100), 50 + (target_size[1] - 750)],
+        [900 + (target_size[0] - 1100), 150 + (target_size[1] - 750)],
+        [1020 + (target_size[0] - 1100), 500 + (target_size[1] - 750)],
+        [610 + (target_size[0] - 1100), 390 + (target_size[1] - 750)]
+    ], dtype=np.float32)
+
+    src = np.array([
+        [243, 60],
+        [531, 168],
+        [551, 381],
+        [132, 167]
+    ], dtype=np.float32)
+
+
+    M = cv2.getPerspectiveTransform(src, dst)
+    ret = cv2.perspectiveTransform(np.array([src]), P.HOMOGRAPHY.MAT)
+
+    print(dst == map_points_onto_minimap(src))
+"""
 
 
 def main_dami():
@@ -118,5 +134,6 @@ def main_dami():
 
 
 if __name__ == '__main__':
-    main_dami_minimap()
-    # main_dami()
+    main_dami()
+
+
