@@ -14,6 +14,8 @@ class PersonOLD(object):
         self.centroid_past = []
         self.color = color
         self.centroid_future = (0,0)
+        self.sift_kp= []
+        self.sift_descriptors = []    # list of arrays, 1 row for each kp
         # self.color = color # TODO color should be a function of its ID
 
 
@@ -30,3 +32,21 @@ def find_closest_person(current_person, persons):
     # distances = np.sqrt(np.sum(np.square(others_centroid - current_centroid), axis=1)) # no need to calc the sqrt
     distances = np.sum(np.square(others_centroid - current_centroid), axis=1)
     return np.argmin(distances)
+
+
+def set_sift_keypoints(img, person):
+    sift = cv2.xfeatures2d.SIFT_create()
+    x11, y11 = person.p1
+    x12, y12 = person.p2
+    x11 = max(0, x11)
+    y11 = max(0, y11)
+    x12 = max(0, x12)
+    y12 = max(0, y12)
+    crop_img = img[y11:y12, x11:x12]
+    gray_crop = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+    kp = sift.detect(gray_crop, None)
+    kp, des1 = sift.compute(gray_crop, kp)
+    person.sift_kp = kp
+    for r in range(des1.shape[0]):
+        person.sift_descriptors.append(des1[r, :])
+    return person
