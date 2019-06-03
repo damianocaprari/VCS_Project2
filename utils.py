@@ -108,7 +108,7 @@ def predict_centroid(old_persons):
 def tracking_centroid(old_persons, img):
     imm = cv2.imread('./Frames1/frame0.jpg', )
     for i in old_persons:
-        #for j in i.centroid_past:
+        # for j in i.centroid_past:
         for j in reversed(i.centroid_past):
             print(j[0], j[1])
             cv2.circle(imm, (j[0].astype(np.int), j[1].astype(np.int)), 2, i.color, -1)
@@ -117,6 +117,7 @@ def tracking_centroid(old_persons, img):
     cv2.imwrite('./out_track/track_video3.jpg', imm)
 
 
+# -- NON USATO
 def follow_new_SIFT(person, old_persons, tmp_persons, img):
     if old_persons:
         print("current person\n", person.sift_kp, len(person.sift_descriptors))
@@ -196,6 +197,9 @@ def sift_contrib(person, other):
     matches = bf.knnMatch(des1, des2, k=2)
     good = []
     # if ho solo 1 non farlo
+    for i in matches:
+        if len(i) <= 1:
+            return 0
     for m, n in matches:
         if m.distance < 0.75 * n.distance:
             good.append(m)
@@ -216,12 +220,12 @@ def match_likelihood(this, other):
     # -- SIFT
     # follow_new_SIFT()
     matches = sift_contrib(this, other)
-    print("matches, ", matches)
+    # print("\nPerson id ",this.id, other.id,  "matches, ", matches)
 
     # calculate likelihood as a function of distance, sift, color, ...
     contributions = []
     contributions.append( min(np.reciprocal(dist), np.finfo(np.float).max))  # distance
-    contributions.append(matches)
+    contributions.append(matches*matches)
     contributions.append( 0 )  # TODO decidere come calcolare la contribution del colore
     # contriutions.append( ... )
 
@@ -231,10 +235,20 @@ def match_likelihood(this, other):
 
 def update_persons(persons_detected, persons_old, max_used_id):
     persons_tmp = []
+    '''
+    print("Now ", len(persons_detected))
+    for d in persons_detected:
+        print(d.id, "  ", id(d))
+    print("Old ", len(persons_old))
+    for c in persons_old:
+        print(c.id)
+    print('\n\n')
+    '''
     if persons_old:     # forse inutile dato che ho gia fatto il controllo fuori dalla funzione
         if len(persons_detected) <= len(persons_old):
             remaining = persons_old.copy()
             for p in persons_detected:
+                # print("person detected ", p.id)
                 likelihoods = list(map(lambda x: match_likelihood(p, x), remaining))
                 if np.amax(likelihoods) <= 0:
                     # no matches found
@@ -246,12 +260,14 @@ def update_persons(persons_detected, persons_old, max_used_id):
                     person_matching = remaining.pop(np.argmax(likelihoods))
                     p.centroid_past.extend(person_matching.centroid_past)
                     p.id = person_matching.id
+
                 persons_tmp.append(p)
             persons_tmp.extend(remaining)
 
         else:  # len(persons_detected) > len(persons_old):
             remaining = persons_detected
             for p in persons_old:
+                print("person old ", p.id)
                 likelihoods = list(map(lambda x: match_likelihood(p, x), remaining))
                 if np.amax(likelihoods) <= 0:
                     # no matches found

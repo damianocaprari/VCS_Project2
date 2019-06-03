@@ -1,10 +1,10 @@
 import numpy as np
 import cv2
-
+from parameters import Parameters as P
 
 class PersonOLD(object):
 
-    def __init__(self, coordinates, color):
+    def __init__(self, coordinates):
         self.id = 0
         self.p1 = np.round(coordinates[:2]).astype(np.int)
         self.p2 = np.round(coordinates[2:]).astype(np.int)
@@ -12,11 +12,14 @@ class PersonOLD(object):
         self.w = self.p2[0] - self.p1[0]
         self.centroid = np.mean([self.p2, self.p1], axis=0)
         self.centroid_past = []
-        self.color = color
         self.centroid_future = (0,0)
         self.sift_kp= []
         self.sift_descriptors = []    # list of arrays, 1 row for each kp
-        # self.color = color # TODO color should be a function of its ID
+        # TODO OPTICAL FLOW
+
+    @property
+    def color(self):
+        return P.COLORS[self.id % (len(P.COLORS))]
 
 
     def draw_bounding_box_on_img(self, img):

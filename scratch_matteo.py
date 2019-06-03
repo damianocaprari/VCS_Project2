@@ -114,7 +114,7 @@ def main_matteo():
     for idx, (img, torch_img) in enumerate(loader):
         if img is None or torch_img is None:
             continue
-        print('Frame ', idx)
+        print('\nFrame ', idx)
         torch_img = torch_img.type(Tensor).to(device)
 
         startTime = datetime.now()
@@ -124,9 +124,14 @@ def main_matteo():
             detections = detections[detections[:, -1] == 0.]
             detections = rescale_boxes(detections, IMG_SIZE, img.shape[:2])
             persons_detected = []
+            tmp_new_id = 100
             for i, detection in enumerate(detections):
-                person = PersonOLD(detection[:4].cpu().numpy(), colors[i])
-                person.id = max_used_id
+                person = PersonOLD(detection[:4].cpu().numpy())
+
+                # person.id = max_used_id
+                person.id = tmp_new_id
+                tmp_new_id += 1
+
                 sift_img = np.copy(img)
                 person = set_sift_keypoints(sift_img, person)
                 person.centroid_past.append(person.centroid)
@@ -143,9 +148,8 @@ def main_matteo():
             for p in persons_old:
                 p.draw_bounding_box_on_img(img)
                 cv2.circle(img, (p.centroid[0].astype(np.int), p.centroid[1].astype(np.int)), 1, p.color, -1)
-        else:
-            print("NO DETECTION")
-
+        #else:
+            # print("NO DETECTION")
         cv2.imshow('output', img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
