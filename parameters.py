@@ -71,6 +71,7 @@ class Parameters:
         DISTANCE_THS = 30000
         WEIGHTS = [1,  # distance
                    1,  # color
+                   0.5,   # sift
                    # ... altro ...
                   ]
 

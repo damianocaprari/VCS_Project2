@@ -182,12 +182,24 @@ def follow_new_SIFT(person, old_persons, tmp_persons, img):
             #img2 = cv2.drawKeypoints(gray2, kp2, im2)
             #cv2.imshow('a2', img2)
             #cv2.waitKey()
-
-
-
     else:
         tmp_persons.append(person)
     return person, old_persons, tmp_persons
+
+
+def sift_contrib(person, other):
+    # print("current person\n", person.sift_kp, len(person.sift_descriptors))
+    bf = cv2.BFMatcher()
+    # print("Other person\n", other.sift_kp, len(other.sift_descriptors))
+    des1 = np.asarray(person.sift_descriptors)
+    des2 = np.asarray(other.sift_descriptors)
+    matches = bf.knnMatch(des1, des2, k=2)
+    good = []
+    # if ho solo 1 non farlo
+    for m, n in matches:
+        if m.distance < 0.75 * n.distance:
+            good.append(m)
+    return len(good)
 
 
 def match_likelihood(this, other):
@@ -203,11 +215,13 @@ def match_likelihood(this, other):
 
     # -- SIFT
     # follow_new_SIFT()
+    matches = sift_contrib(this, other)
+    print("matches, ", matches)
 
-
-    # calculate likelihood as a function of distance, color, ...
+    # calculate likelihood as a function of distance, sift, color, ...
     contributions = []
     contributions.append( min(np.reciprocal(dist), np.finfo(np.float).max))  # distance
+    contributions.append(matches)
     contributions.append( 0 )  # TODO decidere come calcolare la contribution del colore
     # contriutions.append( ... )
 

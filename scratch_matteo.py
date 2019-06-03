@@ -101,7 +101,7 @@ def main_matteo():
         IMG_SIZE = P.CPU.IMG_SIZE
 
     net = create_darknet_instance(IMG_SIZE, device, P.DARKNET.CONF_THS, P.DARKNET.NMS_THS)
-    loader = VideoDataLoader('./Videos/video1.mp4', IMG_SIZE)
+    loader = VideoDataLoader('./Videos/video6.mp4', IMG_SIZE)
 
     colors = P.COLORS
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
