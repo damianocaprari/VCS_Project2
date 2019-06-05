@@ -54,34 +54,20 @@ def follow_SIFT(person, old_persons, tmp_persons, img):
             person.centroid_past.extend(cp)
             old_persons.remove(old_persons[idx_betterSIFT_old_person])
             tmp_persons.append(person)
-
-            #x21, y21 = p.p1
-            #x22, y22 = p.p2
-            #x21 = max(0, x21)
-            #y21 = max(0, y21)
-            #x22 = max(0, x22)
-            #y22 = max(0, y22)
-
-            #crop_img2 = img[y21:y22, x21:x22]
-            #cv2.imshow('old person', crop_img2)
-            #cv2.waitKey()
-
-            #gray2 = cv2.cvtColor(crop_img2, cv2.COLOR_BGR2GRAY)
-            #kp2 = sift.detect(gray2, None)
-            #kp2, des2 = sift.compute(gray2, kp2)
-            #img = cv2.drawKeypoints(gray, kp1, img)
-            #cv2.imshow('a1', img)
-            #cv2.waitKey()
-
-            #img2 = cv2.drawKeypoints(gray2, kp2, im2)
-            #cv2.imshow('a2', img2)
-            #cv2.waitKey()
-
-
-
     else:
         tmp_persons.append(person)
     return person, old_persons, tmp_persons
+
+
+
+def draw_points_in_birdeye(z_img, persons):
+    for p in persons:
+        a = np.float32([p.ground_point])
+        pt = from_camera_to_birdeye(a)[0]
+        cv2.circle(z_img, (pt[0], pt[1]), 3, p.color, -1)
+    cv2.imshow('track', z_img)
+    cv2.waitKey(10)
+    return z_img
 
 
 # todo ONLY main function, others in utils
@@ -101,7 +87,7 @@ def main_matteo():
         IMG_SIZE = P.CPU.IMG_SIZE
 
     net = create_darknet_instance(IMG_SIZE, device, P.DARKNET.CONF_THS, P.DARKNET.NMS_THS)
-    loader = VideoDataLoader('./Videos/video6.mp4', IMG_SIZE)
+    loader = VideoDataLoader('./Videos/vid2.mp4', IMG_SIZE)
 
     colors = P.COLORS
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -111,6 +97,8 @@ def main_matteo():
     max_used_id = 0
     startTime = datetime.now()
 
+    z_img = cv2.imread('aligned.jpg')
+
     for idx, (img, torch_img) in enumerate(loader):
         if img is None or torch_img is None:
             continue
@@ -118,6 +106,8 @@ def main_matteo():
         torch_img = torch_img.type(Tensor).to(device)
 
         startTime = datetime.now()
+
+        persons_detected = []
 
         detections = net.detect(torch_img)[0]
         if detections is not None:
@@ -134,7 +124,6 @@ def main_matteo():
 
                 sift_img = np.copy(img)
                 person = set_sift_keypoints(sift_img, person)
-                person.centroid_past.append(person.centroid)
                 persons_detected.append(person)
 
             # print('Persons in the frame:', len(persons_detected))
@@ -148,17 +137,23 @@ def main_matteo():
             for p in persons_old:
                 p.draw_bounding_box_on_img(img)
                 cv2.circle(img, (p.centroid[0].astype(np.int), p.centroid[1].astype(np.int)), 1, p.color, -1)
+                cv2.circle(img, (p.ground_point[0], p.ground_point[1]), 3, p.color, -1)
+
+        z_img = draw_points_in_birdeye(z_img, persons_old)
+
         #else:
             # print("NO DETECTION")
         cv2.imshow('output', img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         writer.write(img)
+
+
     print("\n\nTime taken:", datetime.now() - startTime, "\n")
 
-    print('a')
+    #print('a')
     #tracking_centroid(persons_old, img)
-    print('a')
+    #print('a')
 
     if isinstance(loader, VideoDataLoader):
         loader.close()

@@ -1,6 +1,8 @@
 import numpy as np
 
 class Parameters:
+    MAX_GHOST_DETECTION = 3
+    NUMBER_OF_POINTS_CALC_GHOST = 5
 
     class CUDA:
         DEVICE = 'cuda:0'
@@ -68,7 +70,7 @@ class Parameters:
 
 
     class LIKELIHOOD:
-        DISTANCE_THS = 30000
+        DISTANCE_THS = 100
         WEIGHTS = [1,       # distance
                    1,       # color
                    1,     # sift

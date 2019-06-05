@@ -8,7 +8,7 @@ from utils import rescale_boxes
 #from person import Person
 from person_old import PersonOLD
 
-from utils import map_points_onto_minimap
+from utils import from_camera_to_birdeye
 from parameters import Parameters as P
 
 

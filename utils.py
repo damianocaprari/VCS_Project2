@@ -213,7 +213,11 @@ def match_likelihood(this, other):
     :return: likelihood value
     """
     # check thresholds
-    dist = euclidean_distance(this.centroid, other.centroid)
+    pt_this_z = from_camera_to_birdeye(np.float32([this.ground_point]))[0]
+    pt_other_z = from_camera_to_birdeye(np.float32([other.ground_point]))[0]
+
+    dist = euclidean_distance(pt_this_z, pt_other_z)
+    # print("Dist:  ", dist)
     if dist > P.LIKELIHOOD.DISTANCE_THS:
         return 0
 
@@ -233,17 +237,32 @@ def match_likelihood(this, other):
     return np.sum(np.multiply( contributions, P.LIKELIHOOD.WEIGHTS ))
 
 
+def calc_ghost_point(p, mode='camera'):
+    assert mode == 'camera' or mode == 'birdeye', "mode can only be 'camera' or 'birdeye'"
+
+    if mode == 'birdeye':
+        if len(p.ground_point_past) > 2:
+            last_pts = p.ground_point_past[p.ghost_detection_count: p.ghost_detection_count + P.NUMBER_OF_POINTS_CALC_GHOST]
+            if len(last_pts) > 2:
+                last_pts = from_camera_to_birdeye(np.array(last_pts))
+                new_point = np.add(np.subtract(np.mean(last_pts), last_pts[-1]), p.ground_point_past[0])
+                return new_point.astype(np.int)
+
+        return from_camera_to_birdeye(np.reshape(p.ground_point, (1,2)).astype(np.float32))
+
+    else: # if mode == 'camera':
+        if len(p.ground_point_past) > 2:
+            last_pts = p.ground_point_past[p.ghost_detection_count: p.ghost_detection_count + P.NUMBER_OF_POINTS_CALC_GHOST]
+            if len(last_pts) > 2:
+                new_point = np.add(np.subtract(np.mean(last_pts, axis=0), last_pts[-1]), p.ground_point_past[0])
+                return new_point.astype(np.int)
+
+        return p.ground_point
+
+
 def update_persons(persons_detected, persons_old, max_used_id):
     persons_tmp = []
-    '''
-    print("Now ", len(persons_detected))
-    for d in persons_detected:
-        print(d.id, "  ", id(d))
-    print("Old ", len(persons_old))
-    for c in persons_old:
-        print(c.id)
-    print('\n\n')
-    '''
+
     if persons_old:     # forse inutile dato che ho gia fatto il controllo fuori dalla funzione
         if len(persons_detected) <= len(persons_old):
             remaining = persons_old.copy()
@@ -255,14 +274,21 @@ def update_persons(persons_detected, persons_old, max_used_id):
                     # add to person_old, tramite person_tmp
                     max_used_id += 1
                     p.id = max_used_id
-
                 else:
                     person_matching = remaining.pop(np.argmax(likelihoods))
-                    p.centroid_past.extend(person_matching.centroid_past)
-                    p.id = person_matching.id
-
+                    # p.centroid_past.extend(person_matching.centroid_past)
+                    p.update_past(person_matching.id, person_matching.centroid_past, person_matching.ground_point_past)
+                    # p.id = person_matching.id
                 persons_tmp.append(p)
-            persons_tmp.extend(remaining)
+
+            # prima di aggiornare person_tmp aggiungendo remaining...
+            # io prendo questi "fantasmi" e aggiorno i valori, soprattuto il flag real_detection
+            for p in remaining:
+                if p.ghost_detection_count < P.MAX_GHOST_DETECTION:
+                    p.ghost_detection_count += 1
+                    new_ghost_point = calc_ghost_point(p)
+                    p.follow_moving_ground_point(new_ghost_point)
+                    persons_tmp.append(p)
 
         else:  # len(persons_detected) > len(persons_old):
             remaining = persons_detected
@@ -279,8 +305,9 @@ def update_persons(persons_detected, persons_old, max_used_id):
                     persons_tmp.append(p)
                 else:
                     person_matching = remaining.pop(np.argmax(likelihoods))
-                    person_matching.centroid_past.extend(p.centroid_past)
-                    person_matching.id = p.id
+                    # person_matching.centroid_past.extend(p.centroid_past)
+                    person_matching.update_past(p.id, p.centroid_past, p.ground_point_past)
+                    # person_matching.id = p.id
                     persons_tmp.append(person_matching)
 
             for p in remaining:
@@ -297,10 +324,17 @@ def update_persons(persons_detected, persons_old, max_used_id):
     return persons_tmp, max_used_id
 
 
-def map_points_onto_minimap(pts):
+def from_camera_to_birdeye(pts):
     """
     :param pts: list of 2D points
     :return:  np.array of mapped 2D points
     """
     return np.rint(cv2.perspectiveTransform(np.array([pts]), P.HOMOGRAPHY.MAT)[0])
 
+
+def from_birdeye_to_camera(pts):
+    """
+    :param pts: list of 2D points
+    :return:  np.array of mapped 2D points
+    """
+    return np.rint(cv2.perspectiveTransform(np.array([pts]), np.linalg.inv(P.HOMOGRAPHY.MAT))[0])

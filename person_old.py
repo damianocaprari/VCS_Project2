@@ -2,30 +2,64 @@ import numpy as np
 import cv2
 from parameters import Parameters as P
 
+
 class PersonOLD(object):
 
     def __init__(self, coordinates):
+
         self.id = 0
         self.p1 = np.round(coordinates[:2]).astype(np.int)
         self.p2 = np.round(coordinates[2:]).astype(np.int)
-        self.h = self.p2[1] - self.p1[1]
-        self.w = self.p2[0] - self.p1[0]
-        self.centroid = np.mean([self.p2, self.p1], axis=0)
-        self.centroid_past = []
+        self.centroid_past = [np.mean([self.p2, self.p1], axis=0)]
+        self.ground_point_past = [np.array((self.centroid[0], self.p2[1]), dtype=np.int)]
         self.centroid_future = (0,0)
         self.sift_kp= []
         self.sift_descriptors = []    # list of arrays, 1 row for each kp
+
+        self.ghost_detection_count = 0
         # TODO OPTICAL FLOW
 
     @property
-    def color(self):
-        return P.COLORS[self.id % (len(P.COLORS))]
+    def h(self):
+        return self.p2[1] - self.p1[1]
 
+    @property
+    def w(self):
+        return self.p2[0] - self.p1[0]
+
+    @property
+    def centroid(self):
+        return self.centroid_past[0]
+
+    @property
+    def ground_point(self):
+        return self.ground_point_past[0]
+
+    @property
+    def color(self):
+        c = P.COLORS[self.id % (len(P.COLORS))].copy()
+        if self.ghost_detection_count is not 0:
+            c[0] = c[0] / 2; c[1] = c[1] / 2; c[2] = c[2] / 2
+        return c
 
     def draw_bounding_box_on_img(self, img):
         img = cv2.rectangle(img, tuple(self.p1), tuple(self.p2), self.color)
         img = cv2.putText(img, 'ID: ' + str(self.id), tuple(self.p1), cv2.FONT_HERSHEY_PLAIN, 0.8, self.color)
         return img
+
+    def update_past(self, id, centroid_past, ground_point_past):
+        self.id = id
+        self.centroid_past.extend(centroid_past)
+        self.ground_point_past.extend(ground_point_past)
+
+    def follow_moving_ground_point(self, ground_point):
+        h = self.h
+        w = self.w
+        self.p1 = np.array([ground_point[0] - w / 2, ground_point[1] - h]).astype(np.int)
+        self.p2 = np.array([ground_point[0] + w / 2, ground_point[1]]).astype(np.int)
+        self.centroid_past.insert(0, np.array([ground_point[0], ground_point[1] - h / 2]).astype(np.int))
+        self.ground_point_past.insert(0, ground_point)
+
 
 def find_closest_person(current_person, persons):
     current_centroid = current_person.centroid
@@ -49,7 +83,8 @@ def set_sift_keypoints(img, person):
     gray_crop = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
     kp = sift.detect(gray_crop, None)
     kp, des1 = sift.compute(gray_crop, kp)
-    person.sift_kp = kp
-    for r in range(des1.shape[0]):
-        person.sift_descriptors.append(des1[r, :])
+    if des1 is not None:
+        person.sift_kp = kp
+        for r in range(des1.shape[0]):
+            person.sift_descriptors.append(des1[r, :])
     return person
