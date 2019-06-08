@@ -2,33 +2,43 @@ import torch
 import cv2
 import numpy as np
 
-from data import VideoDataLoader
-from yolo_v3 import create_darknet_instance
-from utils import rescale_boxes
+#from data import VideoDataLoader
+#from yolo_v3 import create_darknet_instance
+#from utils import rescale_boxes
 #from person import Person
 from person_old import PersonOLD
 
-from utils import from_camera_to_birdeye
-from parameters import Parameters as P
+#from utils import from_camera_to_birdeye
+#from parameters import Parameters as P
 
 
 # todo ONLY main function, others in utils
 
 # USED TO CREATE THE MINIMAP
-"""
-def alignImages(im1, im2):
-    target_size = (1000, 1000)
+
+def get_birdeye(im1):
+    minimap_pts = [
+        [0, 0], #TR
+        [1045, 0], #TL
+        [1045, 930], #BR
+        [222, 705] #BL grass
+    ]
+
+    target_size = (1800, 1800)
+    displacement = (1500, 1250)
+    delta = (target_size[0] - displacement[0], target_size[1] - displacement[1])
+
     minimap_grid_pts = [
-        [510 + (target_size[0] - 1100), 50 + (target_size[1] - 750)],
-        [900 + (target_size[0] - 1100), 150 + (target_size[1] - 750)],
-        [1020 + (target_size[0] - 1100), 500 + (target_size[1] - 750)],
-        [610 + (target_size[0] - 1100), 390 + (target_size[1] - 750)]
+        [minimap_pts[0][0] + delta[0], minimap_pts[0][1] + delta[1]],
+        [minimap_pts[1][0] + delta[0], minimap_pts[1][1] + delta[1]],
+        [minimap_pts[2][0] + delta[0], minimap_pts[2][1] + delta[1]],
+        [minimap_pts[3][0] + delta[0], minimap_pts[3][1] + delta[1]]
     ]
     perspective_pts = [
-        [243, 60],
-        [531, 168],
-        [551, 381],
-        [132, 167]
+        [390, 345],
+        [1305, 225],
+        [1225, 700],
+        [270, 615]
     ]
 
     # Extract location of good matches
@@ -42,24 +52,19 @@ def alignImages(im1, im2):
     im1Reg = cv2.warpPerspective(im1, h, target_size)
 
     return im1Reg, h
-"""
 
-"""
+
+
 def main_dami_minimap():
-    # Read reference image
-    refFilename = "cvcs02_minimap_grid.jpeg"
-    print("Reading reference image : ", refFilename)
-    imReference = cv2.imread(refFilename, cv2.IMREAD_COLOR)
-
     # Read image to be aligned
-    imFilename = "Frames1/frame0.jpg"
+    imFilename = "img0.png"
     print("Reading image to align : ", imFilename)
     im = cv2.imread(imFilename, cv2.IMREAD_COLOR)
 
     print("Aligning images ...")
     # Registered image will be resotred in imReg.
     # The estimated homography will be stored in h.
-    imReg, h = alignImages(im, imReference)
+    imReg, h = get_birdeye(im)
 
     # Write aligned image to disk.
     outFilename = "aligned.jpg"
@@ -68,7 +73,7 @@ def main_dami_minimap():
 
     # Print estimated homography
     print("Estimated homography : \n", h)
-"""
+
 
 """
 main_prove_con_perspectiveTransform():
@@ -94,7 +99,7 @@ target_size = (1000, 1000)
     print(dst == map_points_onto_minimap(src))
 """
 
-
+"""
 def main_dami():
     CUDA = torch.cuda.is_available()
     if CUDA is True:
@@ -131,9 +136,11 @@ def main_dami():
     if isinstance(loader, VideoDataLoader):
         loader.close()
     writer.release()
+"""
 
 
 if __name__ == '__main__':
-    main_dami()
+    main_dami_minimap()
+    #main_dami()
 
 
