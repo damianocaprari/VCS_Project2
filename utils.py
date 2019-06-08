@@ -264,7 +264,6 @@ def calc_ghost_point(p, mode='camera'):
 
 def update_persons(persons_detected, persons_old, max_used_id):
     persons_tmp = []
-
     if persons_old:     # forse inutile dato che ho gia fatto il controllo fuori dalla funzione
         if len(persons_detected) <= len(persons_old):
             remaining = persons_old.copy()
