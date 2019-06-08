@@ -87,11 +87,13 @@ def main_matteo():
         IMG_SIZE = P.CPU.IMG_SIZE
 
     net = create_darknet_instance(IMG_SIZE, device, P.DARKNET.CONF_THS, P.DARKNET.NMS_THS)
-    loader = VideoDataLoader('./Videos/vid2.mp4', IMG_SIZE)
+    # loader = VideoDataLoader('./Videos/vid2.mp4', IMG_SIZE)
+    loader = VideoDataLoader('./VideosNewCam/v6.mp4', IMG_SIZE)
 
     colors = P.COLORS
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+    # writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+    writer = cv2.VideoWriter('output6new.avi', fourcc, 15.0, (854, 480))
 
     persons_old = []
     max_used_id = 0
@@ -129,20 +131,29 @@ def main_matteo():
             # print('Persons in the frame:', len(persons_detected))
             # print("Old person", len(persons_old))
 
-
             persons_old, max_used_id = update_persons(persons_detected, persons_old, max_used_id)
             # persons_old = persons_tmp    # solo per stampare
-
 
             for p in persons_old:
                 p.draw_bounding_box_on_img(img)
                 cv2.circle(img, (p.centroid[0].astype(np.int), p.centroid[1].astype(np.int)), 1, p.color, -1)
                 cv2.circle(img, (p.ground_point[0], p.ground_point[1]), 3, p.color, -1)
 
+        else:
+            persons_old_tmp = []
+            for p in persons_old:
+                p.ghost_detection_count += 1
+                if p.ghost_detection_count < P.MAX_GHOST_DETECTION:
+                    new_ghost_point = calc_ghost_point(p)
+                    p.follow_moving_ground_point(new_ghost_point)
+                    p.draw_bounding_box_on_img(img)
+                    cv2.circle(img, (p.centroid[0].astype(np.int), p.centroid[1].astype(np.int)), 1, p.color, -1)
+                    cv2.circle(img, (p.ground_point[0], p.ground_point[1]), 3, p.color, -1)
+                    persons_old_tmp.append(p)
+            persons_old = persons_old_tmp
+
         z_img = draw_points_in_birdeye(z_img, persons_old)
 
-        #else:
-            # print("NO DETECTION")
         cv2.imshow('output', img)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -150,10 +161,6 @@ def main_matteo():
 
 
     print("\n\nTime taken:", datetime.now() - startTime, "\n")
-
-    #print('a')
-    #tracking_centroid(persons_old, img)
-    #print('a')
 
     if isinstance(loader, VideoDataLoader):
         loader.close()

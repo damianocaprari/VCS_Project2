@@ -250,11 +250,13 @@ def calc_ghost_point(p, mode='camera'):
 
         return from_camera_to_birdeye(np.reshape(p.ground_point, (1,2)).astype(np.float32))
 
-    else: # if mode == 'camera':
+    else:   # if mode == 'camera':
         if len(p.ground_point_past) > 2:
             last_pts = p.ground_point_past[p.ghost_detection_count: p.ghost_detection_count + P.NUMBER_OF_POINTS_CALC_GHOST]
             if len(last_pts) > 2:
-                new_point = np.add(np.subtract(np.mean(last_pts, axis=0), last_pts[-1]), p.ground_point_past[0])
+                # new_point = np.add(np.subtract(np.mean(last_pts, axis=0), last_pts[-1]), p.ground_point_past[0])
+                new_point = np.add(last_pts[0], np.divide(np.subtract(last_pts[0], last_pts[-1]), P.NUMBER_OF_POINTS_CALC_GHOST - 1))
+
                 return new_point.astype(np.int)
 
         return p.ground_point
