@@ -278,7 +278,24 @@ def calc_ghost_point(p, mode='camera'):
         if len(p.ground_point_past) >= 2:
             last_pts = p.ground_point_past[p.ghost_detection_count: p.ghost_detection_count + P.NUMBER_OF_POINTS_CALC_GHOST]
             if len(last_pts) >= 2:
-                new_point = np.add(p.ground_point, np.divide( np.subtract(last_pts[0], last_pts[-1]), len(last_pts)- 1))
+
+                # todo METTERE A POSTO QUANDO LA DISTANZA E' TROPPO ALTA
+                po = np.divide( np.subtract(last_pts[0], last_pts[-1]), len(last_pts)- 1)
+                print("LUNGHEZZA:\n", po , "\n\n")
+                if np.abs(po[0]) > 5:
+                    po[0] = 5
+                if np.abs(po[1]) > 5:
+                    po[1] = 5
+                if np.abs(po[0]) < 5:
+                    po[0] = -5
+                if np.abs(po[1]) < 5:
+                    po[1] = -5
+                # altrimenti DISTANZA CON PITAGORAf
+
+                # new_point = np.add(p.ground_point, np.divide( np.subtract(last_pts[0], last_pts[-1]), len(last_pts)- 1))
+                new_point = np.add(p.ground_point, po)
+                # todo METTERE A POSTO QUANDO LA DISTANZA E' TROPPO ALTA
+
                 return new_point.astype(np.int)
 
         return p.ground_point

@@ -1,7 +1,7 @@
 import numpy as np
 
 class Parameters:
-    MAX_GHOST_DETECTION = 30 # 5 # 3
+    MAX_GHOST_DETECTION = 10 # 5 # 3
     NUMBER_OF_POINTS_CALC_GHOST = 5
 
     class CUDA:

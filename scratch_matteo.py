@@ -88,12 +88,12 @@ def main_matteo():
 
     net = create_darknet_instance(IMG_SIZE, device, P.DARKNET.CONF_THS, P.DARKNET.NMS_THS)
     # loader = VideoDataLoader('./Videos/vid2.mp4', IMG_SIZE)
-    loader = VideoDataLoader('./VideosNewCam/v2.mp4', IMG_SIZE)
+    loader = VideoDataLoader('./VideosNewCam/v6.mp4', IMG_SIZE)
 
     colors = P.COLORS
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     # writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
-    writer = cv2.VideoWriter('./output_new_cam_DIRECTION/output2.avi', fourcc, 10.0, (854, 480))
+    writer = cv2.VideoWriter('./output_new_cam_DIRECTION/output6.avi', fourcc, 15.0, (854, 480))
 
     persons_old = []
     max_used_id = 0
