@@ -206,6 +206,33 @@ def sift_contrib(person, other):
     return len(good)
 
 
+def direction_contrib(this, other):
+    l_other = other.ground_point_past[0:P.NUMBER_OF_POINTS_CALC_GHOST]
+    if len(l_other) >= 2:
+        l = [this.ground_point]
+        l.extend(l_other)
+        other_vector = np.divide(np.subtract(l_other[0], l_other[-1]), len(l_other)-1)
+        this_vector = np.divide(np.subtract(l[0], l[-1]), len(l)-1)
+        other_angle = np.arctan(other_vector[1])
+        if other_vector[0] < 0:
+            other_angle += np.pi
+        this_angle = np.arctan(this_vector[1])
+        if this_vector[0] < 0:
+            this_angle += np.pi
+        angle = np.abs(other_angle - this_angle)
+
+
+        # print("\nother and this angles: ", other_angle, this_angle)
+        # print("return: ", -(angle - (np.pi/2))/P.LIKELIHOOD.DIRECTION_CONTRIB)
+
+
+        return -(angle - (np.pi/2))/P.LIKELIHOOD.DIRECTION_CONTRIB
+
+    else:
+        print("return: LEN < 2")
+        return 0
+
+
 def match_likelihood(this, other):
     """
     :param this: person
@@ -222,16 +249,13 @@ def match_likelihood(this, other):
         return 0
 
     # -- SIFT
-    # follow_new_SIFT()
     matches = sift_contrib(this, other)
-    # print("\nPerson id ",this.id, other.id,  "matches, ", matches)
 
     # calculate likelihood as a function of distance, sift, color, ...
     contributions = []
     contributions.append( min(np.reciprocal(dist), np.finfo(np.float).max))  # distance
     contributions.append(matches*matches)
-    contributions.append( 0 )  # TODO decidere come calcolare la contribution del colore
-    # contriutions.append( ... )
+    contributions.append(direction_contrib(this, other))
 
     # TODO forse vale la pena imparare la loss function con del ML
     return np.sum(np.multiply( contributions, P.LIKELIHOOD.WEIGHTS ))
@@ -241,22 +265,20 @@ def calc_ghost_point(p, mode='camera'):
     assert mode == 'camera' or mode == 'birdeye', "mode can only be 'camera' or 'birdeye'"
 
     if mode == 'birdeye':
-        if len(p.ground_point_past) > 2:
+        if len(p.ground_point_past) >= 2:
             last_pts = p.ground_point_past[p.ghost_detection_count: p.ghost_detection_count + P.NUMBER_OF_POINTS_CALC_GHOST]
-            if len(last_pts) > 2:
+            if len(last_pts) >= 2:
                 last_pts = from_camera_to_birdeye(np.array(last_pts))
-                new_point = np.add(np.subtract(np.mean(last_pts), last_pts[-1]), p.ground_point_past[0])
+                new_point = np.add(p.ground_point, np.divide(np.subtract(last_pts[0], last_pts[-1]), len(last_pts) - 1))
                 return new_point.astype(np.int)
 
-        return from_camera_to_birdeye(np.reshape(p.ground_point, (1,2)).astype(np.float32))
+        return from_camera_to_birdeye(np.reshape(p.ground_point, (1, 2)).astype(np.float32))
 
     else:   # if mode == 'camera':
-        if len(p.ground_point_past) > 2:
+        if len(p.ground_point_past) >= 2:
             last_pts = p.ground_point_past[p.ghost_detection_count: p.ghost_detection_count + P.NUMBER_OF_POINTS_CALC_GHOST]
-            if len(last_pts) > 2:
-                # new_point = np.add(np.subtract(np.mean(last_pts, axis=0), last_pts[-1]), p.ground_point_past[0])
-                new_point = np.add(last_pts[0], np.divide(np.subtract(last_pts[0], last_pts[-1]), P.NUMBER_OF_POINTS_CALC_GHOST - 1))
-
+            if len(last_pts) >= 2:
+                new_point = np.add(p.ground_point, np.divide( np.subtract(last_pts[0], last_pts[-1]), len(last_pts)- 1))
                 return new_point.astype(np.int)
 
         return p.ground_point
@@ -295,7 +317,7 @@ def update_persons(persons_detected, persons_old, max_used_id):
             remaining = persons_detected
             for p in persons_old:
                 print("person old ", p.id)
-                likelihoods = list(map(lambda x: match_likelihood(p, x), remaining))
+                likelihoods = list(map(lambda x: match_likelihood(x, p), remaining))
                 if np.amax(likelihoods) <= 0:
                     # no matches found
                     # la persona old e' USCITA oppure NASCOSTA

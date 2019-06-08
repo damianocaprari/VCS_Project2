@@ -71,9 +71,10 @@ class Parameters:
 
     class LIKELIHOOD:
         DISTANCE_THS = 100
+        DIRECTION_CONTRIB = 18     # more means less
         WEIGHTS = [1,       # distance
-                   1,       # color
-                   1,     # sift
+                   1,       # sift
+                   1,       # direction contrib
                    # ... altro ...
                   ]
 
