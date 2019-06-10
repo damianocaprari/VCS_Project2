@@ -93,7 +93,7 @@ def main_matteo():
     colors = P.COLORS
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     # writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
-    writer = cv2.VideoWriter('output6new.avi', fourcc, 15.0, (854, 480))
+    writer = cv2.VideoWriter('./output_new_cam_DIRECTION/output6.avi', fourcc, 15.0, (854, 480))
 
     persons_old = []
     max_used_id = 0
@@ -142,14 +142,21 @@ def main_matteo():
         else:
             persons_old_tmp = []
             for p in persons_old:
+
+                print("\nGROUND POINTS PAST\n", p.ground_point_past)
+
                 p.ghost_detection_count += 1
                 if p.ghost_detection_count < P.MAX_GHOST_DETECTION:
                     new_ghost_point = calc_ghost_point(p)
+
+                    print("new ghost point: ", new_ghost_point)
+
                     p.follow_moving_ground_point(new_ghost_point)
                     p.draw_bounding_box_on_img(img)
                     cv2.circle(img, (p.centroid[0].astype(np.int), p.centroid[1].astype(np.int)), 1, p.color, -1)
                     cv2.circle(img, (p.ground_point[0], p.ground_point[1]), 3, p.color, -1)
                     persons_old_tmp.append(p)
+
             persons_old = persons_old_tmp
 
         z_img = draw_points_in_birdeye(z_img, persons_old)
