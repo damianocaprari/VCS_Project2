@@ -485,3 +485,11 @@ def from_birdeye_to_camera(pts):
     :return:  np.array of mapped 2D points
     """
     return np.rint(cv2.perspectiveTransform(np.array([pts]), np.linalg.inv(P.HOMOGRAPHY.MAT))[0])
+
+
+def load_undistortion_parameters():
+    camera_matrix = np.load('./calibration_parameters/camera_matrix.npy')
+    distortion_coefficients = np.load('./calibration_parameters/distortion_coefficients.npy')
+    rotation_vectors = np.load('./calibration_parameters/rotation_vectors.npy')
+    translation_vectors = np.load('./calibration_parameters/translation_vectors.npy')
+    return camera_matrix, distortion_coefficients, rotation_vectors, translation_vectors
