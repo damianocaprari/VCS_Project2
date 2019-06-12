@@ -213,26 +213,48 @@ def direction_contrib(this, other):
         l.extend(l_other)
         other_vector = np.divide(np.subtract(l_other[0], l_other[-1]), len(l_other)-1)
         this_vector = np.divide(np.subtract(l[0], l[-1]), len(l)-1)
-        other_angle = np.arctan(other_vector[1])
-        if other_vector[0] < 0:
-            other_angle += np.pi
-        this_angle = np.arctan(this_vector[1])
-        if this_vector[0] < 0:
-            this_angle += np.pi
-        angle = np.abs(other_angle - this_angle)
-
-
-        # print("\nother and this angles: ", other_angle, this_angle)
-        # print("return: ", -(angle - (np.pi/2))/P.LIKELIHOOD.DIRECTION_CONTRIB)
-
-
-        return -(angle - (np.pi/2))/P.LIKELIHOOD.DIRECTION_CONTRIB
+        # other_angle = np.arctan(other_vector[1])
+        other_angle = np.arctan2(other_vector[1], other_vector[0])
+        this_angle = np.arctan2(this_vector[1], this_vector[0])
+        return min(np.abs(this_angle - other_angle), np.abs(other_angle - this_angle))
 
     else:
         print("return: LEN < 2")
-        return 0
+        return 999 # 0
 
 
+def match_likelihood_DICT(this, other):
+    """
+    :param this: person
+    :param other:  person
+    :return: likelihood value
+    """
+    # -- DICTIONARY --
+    """
+    likel_dict
+        0: distance
+        1: sift
+        2: direction
+        3: other.id 
+    """
+    likel_dict = np.zeros((4), dtype=np.float)
+    likel_dict[3] = other.id
+
+    # find points in birdeye view
+    pt_this_z = from_camera_to_birdeye(np.float32([this.ground_point]))[0]
+    pt_other_z = from_camera_to_birdeye(np.float32([other.ground_point]))[0]
+
+    # -- distance
+    likel_dict[0] = euclidean_distance(pt_this_z, pt_other_z)
+    # -- sift
+    likel_dict[1] = sift_contrib(this, other)              # return number of matches
+    # -- direction
+    likel_dict[2] = direction_contrib(this, other)    # return angular distance
+    return likel_dict
+
+
+
+'''
 def match_likelihood(this, other):
     """
     :param this: person
@@ -242,24 +264,19 @@ def match_likelihood(this, other):
     # check thresholds
     pt_this_z = from_camera_to_birdeye(np.float32([this.ground_point]))[0]
     pt_other_z = from_camera_to_birdeye(np.float32([other.ground_point]))[0]
-
     dist = euclidean_distance(pt_this_z, pt_other_z)
     # print("Dist:  ", dist)
     if dist > P.LIKELIHOOD.DISTANCE_THS:
         return 0
-
     # -- SIFT
     matches = sift_contrib(this, other)
-
     # calculate likelihood as a function of distance, sift, color, ...
     contributions = []
     contributions.append( min(np.reciprocal(dist), np.finfo(np.float).max))  # distance
     contributions.append(matches*matches)
     contributions.append(direction_contrib(this, other))
-
-    # TODO forse vale la pena imparare la loss function con del ML
     return np.sum(np.multiply( contributions, P.LIKELIHOOD.WEIGHTS ))
-
+'''
 
 def calc_ghost_point(p, mode='camera'):
     assert mode == 'camera' or mode == 'birdeye', "mode can only be 'camera' or 'birdeye'"
@@ -286,9 +303,9 @@ def calc_ghost_point(p, mode='camera'):
                     po[0] = 5
                 if np.abs(po[1]) > 5:
                     po[1] = 5
-                if np.abs(po[0]) < 5:
+                if np.abs(po[0]) < -5:
                     po[0] = -5
-                if np.abs(po[1]) < 5:
+                if np.abs(po[1]) < -5:
                     po[1] = -5
                 # altrimenti DISTANZA CON PITAGORAf
 
@@ -301,6 +318,96 @@ def calc_ghost_point(p, mode='camera'):
         return p.ground_point
 
 
+def return_scores(likelihoods):
+    idx_dist_min = np.argmin(likelihoods[:, 0])
+    idx_sift_max = np.argmax(likelihoods[:, 1])
+    idx_dir_min = np.argmin(likelihoods[:, 2])
+
+    scoreboard = np.zeros_like((likelihoods), dtype=np.int)
+    scoreboard[idx_dist_min, 0] = 1
+    scoreboard[likelihoods[:, 0] >P.LIKELIHOOD.DISTANCE_THS, 0] = -100
+
+    scoreboard[idx_sift_max, 1] = 1
+
+    scoreboard[idx_dir_min, 2] = 1
+    scoreboard[likelihoods[:, 2] > P.LIKELIHOOD.DIRECTION_THS , 2] = -1
+    scoreboard[likelihoods[:, 2] == 999, 2] = 0
+
+    ret_scores = np.sum(scoreboard, axis=1)
+    idx = np.argmax(ret_scores)
+    return idx, ret_scores[idx]
+
+
+
+def update_persons_DICT(persons_detected, persons_old, max_used_id):
+    persons_tmp = []
+    if persons_old:     # forse inutile dato che ho gia fatto il controllo fuori dalla funzione
+        if len(persons_detected) <= len(persons_old):
+            remaining = persons_old.copy()
+            for p in persons_detected:
+                # print("person detected ", p.id)
+
+                likelihoods = np.array( list(map(lambda x: match_likelihood_DICT(p, x), remaining)) )
+                idx, score = return_scores(likelihoods)
+
+                if score <= 0:
+                    # no matches found
+                    # add to person_old, tramite person_tmp
+                    max_used_id += 1
+                    p.id = max_used_id
+                else:
+                    person_matching = remaining.pop(idx)
+                    # p.centroid_past.extend(person_matching.centroid_past)
+                    p.update_past(person_matching.id, person_matching.centroid_past, person_matching.ground_point_past)
+                    # p.id = person_matching.id
+                persons_tmp.append(p)
+
+            # prima di aggiornare person_tmp aggiungendo remaining...
+            # io prendo questi "fantasmi" e aggiorno i valori, soprattuto il flag real_detection
+            for p in remaining:
+                if p.ghost_detection_count < P.MAX_GHOST_DETECTION:
+                    p.ghost_detection_count += 1
+                    new_ghost_point = calc_ghost_point(p)
+                    p.follow_moving_ground_point(new_ghost_point)
+                    persons_tmp.append(p)
+
+        else:  # len(persons_detected) > len(persons_old):
+            remaining = persons_detected
+            for p in persons_old:
+                print("person old ", p.id)
+                likelihoods = np.array(list(map(lambda x: match_likelihood_DICT(x, p), remaining)))
+
+                idx, score = return_scores(likelihoods)
+
+                if score <= 0:
+                    # no matches found
+                    # la persona old e' USCITA oppure NASCOSTA
+                    if p.ghost_detection_count < P.MAX_GHOST_DETECTION:
+                        p.ghost_detection_count += 1
+                        new_ghost_point = calc_ghost_point(p)
+                        p.follow_moving_ground_point(new_ghost_point)
+                        persons_tmp.append(p)
+                else:
+                    person_matching = remaining.pop(idx)
+                    # person_matching.centroid_past.extend(p.centroid_past)
+                    person_matching.update_past(p.id, p.centroid_past, p.ground_point_past)
+                    # person_matching.id = p.id
+                    persons_tmp.append(person_matching)
+
+            for p in remaining:
+                max_used_id += 1
+                p.id = max_used_id
+                persons_tmp.append(p)
+
+    else:  # persons_old is empty
+        for p in persons_detected:
+            max_used_id += 1
+            p.id = max_used_id
+            persons_tmp.append(p)
+
+    return persons_tmp, max_used_id
+
+'''
 def update_persons(persons_detected, persons_old, max_used_id):
     persons_tmp = []
     if persons_old:     # forse inutile dato che ho gia fatto il controllo fuori dalla funzione
@@ -362,7 +469,7 @@ def update_persons(persons_detected, persons_old, max_used_id):
             persons_tmp.append(p)
 
     return persons_tmp, max_used_id
-
+'''
 
 def from_camera_to_birdeye(pts):
     """

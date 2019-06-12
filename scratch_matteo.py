@@ -10,7 +10,7 @@ from parameters import Parameters as P
 from datetime import datetime
 
 
-
+"""
 def follow_SIFT(person, old_persons, tmp_persons, img):
     if old_persons:
         print("current person\n", person.sift_kp, len(person.sift_descriptors))
@@ -57,7 +57,7 @@ def follow_SIFT(person, old_persons, tmp_persons, img):
     else:
         tmp_persons.append(person)
     return person, old_persons, tmp_persons
-
+"""
 
 
 def draw_points_in_birdeye(z_img, persons):
@@ -88,12 +88,12 @@ def main_matteo():
 
     net = create_darknet_instance(IMG_SIZE, device, P.DARKNET.CONF_THS, P.DARKNET.NMS_THS)
     # loader = VideoDataLoader('./Videos/vid2.mp4', IMG_SIZE)
-    loader = VideoDataLoader('./VideosNewCam/v6.mp4', IMG_SIZE)
+    loader = VideoDataLoader('./VideosNewCam/v11.mp4', IMG_SIZE)
 
     colors = P.COLORS
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     # writer = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
-    writer = cv2.VideoWriter('./output_new_cam_DIRECTION/output6.avi', fourcc, 15.0, (854, 480))
+    writer = cv2.VideoWriter('./output_new_cam_DIRECTION/output11.avi', fourcc, 15.0, (854, 480))  # !!! deve essere la stessa dim dell'input dell img !!!!
 
     persons_old = []
     max_used_id = 0
@@ -106,8 +106,6 @@ def main_matteo():
             continue
         print('\nFrame ', idx)
         torch_img = torch_img.type(Tensor).to(device)
-
-        startTime = datetime.now()
 
         persons_detected = []
 
@@ -131,7 +129,7 @@ def main_matteo():
             # print('Persons in the frame:', len(persons_detected))
             # print("Old person", len(persons_old))
 
-            persons_old, max_used_id = update_persons(persons_detected, persons_old, max_used_id)
+            persons_old, max_used_id = update_persons_DICT(persons_detected, persons_old, max_used_id)
             # persons_old = persons_tmp    # solo per stampare
 
             for p in persons_old:

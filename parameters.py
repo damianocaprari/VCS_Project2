@@ -70,7 +70,8 @@ class Parameters:
 
 
     class LIKELIHOOD:
-        DISTANCE_THS = 100
+        DISTANCE_THS = 50       # 100
+        DIRECTION_THS = (np.pi * 2) / 3
         DIRECTION_CONTRIB = 18     # more means less
         WEIGHTS = [1,       # distance
                    1,       # sift
