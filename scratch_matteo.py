@@ -10,7 +10,7 @@ from parameters import Parameters as P
 from datetime import datetime
 
 
-
+"""
 def follow_SIFT(person, old_persons, tmp_persons, img):
     if old_persons:
         print("current person\n", person.sift_kp, len(person.sift_descriptors))
@@ -57,7 +57,7 @@ def follow_SIFT(person, old_persons, tmp_persons, img):
     else:
         tmp_persons.append(person)
     return person, old_persons, tmp_persons
-
+"""
 
 
 def draw_points_in_birdeye(z_img, persons):
@@ -131,7 +131,7 @@ def main_matteo():
             # print('Persons in the frame:', len(persons_detected))
             # print("Old person", len(persons_old))
 
-            persons_old, max_used_id = update_persons(persons_detected, persons_old, max_used_id)
+            persons_old, max_used_id = update_persons_DICT(persons_detected, persons_old, max_used_id)
             # persons_old = persons_tmp    # solo per stampare
 
             for p in persons_old:
