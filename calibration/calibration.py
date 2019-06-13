@@ -5,7 +5,7 @@ import glob
 import os
 
 
-DEBUG = False
+DEBUG = True
 
 
 def main():
@@ -24,7 +24,7 @@ def main():
 
     for file_name in images:
         img = cv2.imread(file_name)
-        img = cv2.resize(img, (500, 500))
+        # img = cv2.resize(img, (500, 500))
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         # Find the chessboard corners
@@ -34,7 +34,7 @@ def main():
         if ret is True:
             objpoints.append(objp)
 
-            corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
+            corners2 = cv2.cornerSubPix(gray, corners, (7, 9), (-1, -1), criteria)
             imgpoints.append(corners2)
 
             if DEBUG is True:
@@ -60,6 +60,15 @@ def main():
         print('Calibration done correctly.')
     else:
         print('Something went wrong during the computation of the calibration.')
+
+    if DEBUG is True:
+        for i, img_file_name in enumerate(images):
+            img = cv2.imread(img_file_name)
+            # img = cv2.resize(img, (500, 500))
+            h, w = img.shape[:2]
+            new_camera_matrix, _ = cv2.getOptimalNewCameraMatrix(camera_matrix, distortion_coefficients, (h, w), 0.3)
+            dst = cv2.undistort(img, camera_matrix, distortion_coefficients, newCameraMatrix=new_camera_matrix)
+            cv2.imwrite('../Calibration_frames/' + str(i) + '.jpg', dst)
 
 
 if __name__ == '__main__':

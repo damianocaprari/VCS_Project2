@@ -58,5 +58,18 @@ def main_marco():
 
     if isinstance(loader, VideoDataLoader):
         loader.close()
-    writer.release()
     print("\n\nTime taken:", datetime.now() - startTime, "\n")
+
+
+if __name__ == '__main__':
+    from utils import load_undistortion_parameters
+    from calibration import undistort_img
+    camera_matrix, distortion_parameters, _, _ = load_undistortion_parameters()
+    img = cv2.imread('./Calibration_frames/cal01.png')
+    img = cv2.resize(img, (500, 500))
+    print(img.shape)
+    img = undistort_img(img, camera_matrix, distortion_parameters, 0.7)
+    print(img.shape)
+    cv2.imshow('out', img)
+    cv2.imwrite('out.jpg', img)
+    cv2.waitKey()
