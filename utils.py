@@ -290,33 +290,20 @@ def calc_ghost_point(p, mode='camera'):
                 last_pts = from_camera_to_birdeye(np.array(last_pts))
                 new_point = np.add(p.ground_point, np.divide(np.subtract(last_pts[0], last_pts[-1]), len(last_pts) - 1))
                 return new_point.astype(np.int)
-
         return from_camera_to_birdeye(np.reshape(p.ground_point, (1, 2)).astype(np.float32))
 
     else:   # if mode == 'camera':
         if len(p.ground_point_past) >= 2:
             last_pts = p.ground_point_past[p.ghost_detection_count: p.ghost_detection_count + P.NUMBER_OF_POINTS_CALC_GHOST]
             if len(last_pts) >= 2:
-
-                # todo METTERE A POSTO QUANDO LA DISTANZA E' TROPPO ALTA
-                po = np.divide( np.subtract(last_pts[0], last_pts[-1]), len(last_pts)- 1)
-                print("LUNGHEZZA:\n", po , "\n\n")
-                if np.abs(po[0]) > 5:
-                    po[0] = 5
-                if np.abs(po[1]) > 5:
-                    po[1] = 5
-                if np.abs(po[0]) < -5:
-                    po[0] = -5
-                if np.abs(po[1]) < -5:
-                    po[1] = -5
-                # altrimenti DISTANZA CON PITAGORAf
-
-                # new_point = np.add(p.ground_point, np.divide( np.subtract(last_pts[0], last_pts[-1]), len(last_pts)- 1))
-                new_point = np.add(p.ground_point, po)
-                # todo METTERE A POSTO QUANDO LA DISTANZA E' TROPPO ALTA
-
-                return new_point.astype(np.int)
-
+                pt = np.divide(np.subtract(last_pts[0], last_pts[-1]), len(last_pts) - 1)
+                dist = np.sqrt(pt[0]**2 + pt[1]**2)
+                if dist > P.MAX_DISTANCE_FOR_CALC_GHOST:
+                    print("old PT: ", pt)
+                    pt = pt * P.MAX_DISTANCE_FOR_CALC_GHOST / dist
+                    print("scale: ", P.MAX_DISTANCE_FOR_CALC_GHOST / dist)
+                    print("new PT: ", pt)
+                return np.add(p.ground_point, pt).astype(np.int)
         return p.ground_point
 
 

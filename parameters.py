@@ -3,6 +3,7 @@ import numpy as np
 class Parameters:
     MAX_GHOST_DETECTION = 10 # 5 # 3
     NUMBER_OF_POINTS_CALC_GHOST = 5
+    MAX_DISTANCE_FOR_CALC_GHOST = 7
 
     class CUDA:
         DEVICE = 'cuda:0'
