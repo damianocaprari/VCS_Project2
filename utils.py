@@ -7,6 +7,7 @@ from person import *
 from yolo_v3.utils.utils import rescale_boxes
 import numpy as np
 from parameters import Parameters as P
+from calibration import undistort_img
 
 
 def euclidean_distance(p1, p2):
@@ -47,9 +48,10 @@ def mog():
     cv2.destroyAllWindows()
 
 
-def read_image_cv2_torch(input_img, img_size):
+def read_image_cv2_torch(input_img, img_size, camera_matrix, distortion_coefficients):
     img = cv2.imread(input_img)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = undistort_img(img, camera_matrix, distortion_coefficients, P.DISTORTION.ALPHA)
     torch_img = cv2_img_to_torch_tensor(img, img_size)
     return img, torch_img
 
@@ -485,3 +487,11 @@ def from_birdeye_to_camera(pts):
     :return:  np.array of mapped 2D points
     """
     return np.rint(cv2.perspectiveTransform(np.array([pts]), np.linalg.inv(P.HOMOGRAPHY.MAT))[0])
+
+
+def load_undistortion_parameters():
+    camera_matrix = np.load('./calibration_parameters/camera_matrix.npy')
+    distortion_coefficients = np.load('./calibration_parameters/distortion_coefficients.npy')
+    rotation_vectors = np.load('./calibration_parameters/rotation_vectors.npy')
+    translation_vectors = np.load('./calibration_parameters/translation_vectors.npy')
+    return camera_matrix, distortion_coefficients, rotation_vectors, translation_vectors

@@ -22,6 +22,9 @@ class Parameters:
         SIZE = (640, 480)
         COLOR = True
 
+    class DISTORTION:
+        ALPHA = 0.3
+
     COLORS = [[255,   0,   0],
               [  0, 255,   0],
               [  0,   0, 255],
