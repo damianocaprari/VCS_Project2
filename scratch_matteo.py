@@ -164,6 +164,8 @@ def main_matteo():
             break
         writer.write(img)
 
+    birdeyename = 'birdeye_view.png'
+    cv2.imwrite(birdeyename, z_img)
 
     print("\n\nTime taken:", datetime.now() - startTime, "\n")
 
